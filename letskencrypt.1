@@ -1,0 +1,308 @@
+.Dd $Mdocdate: May 17 2016 $
+.Dt LETSKENCRYPT 1
+.Os
+.Sh NAME
+.Nm letskencrypt
+.Nd secure Let's Encrypt client
+.\" .Sh LIBRARY
+.\" For sections 2, 3, and 9 only.
+.\" Not used in OpenBSD.
+.Sh SYNOPSIS
+.Nm letskencrypt
+.Op Fl Fvn
+.Op Fl C Ar challengedir
+.Op Fl c Ar certdir
+.Op Fl f Ar accountkey
+.Op Fl k Ar domainkey
+.Ar domain
+.Op Ar altnames...
+.Sh DESCRIPTION
+The
+.Nm
+utility submits an X509 certificate for
+.Ar domain
+and its alternate DNS names
+.Ar altnames
+to a
+.Dq Let's Encrypt
+server for automated signing.
+It must be run as root.
+(Why?
+.Xr chroot 2 ) .
+.Pp
+By default, it uses
+.Pa /var/www/letsencrypt
+for responding to challenges
+.Pq Fl C ,
+.Pa /etc/ssl/letsencrypt
+for the public certificate directory
+.Pq Fl c ,
+.Pa /etc/ssl/letsencrypt/private/privkey.pem
+for the domain private key
+.Pq Fl k ,
+and
+.Pa /etc/letsencrypt/privkey.pem
+for the account private key
+.Pq Fl f .
+Its arguments are as follows:
+.Bl -tag -width Ds
+.It Fl v
+Verbose operation.
+Specify twice to also trace communication and data transfers.
+.It Fl F
+Force updating the certificate signature even if it's too soon.
+.It Fl n
+Create a new account key.
+This will fail if a file already exists in the account key's place.
+.It Fl C Ar challengedir
+Where to register challenges.
+See
+.Sx Challenges
+for details.
+.It Fl c Ar certdir
+Where to put public certificates.
+See
+.Sx Certificates
+for details.
+.It Fl f Ar accountkey
+The account private key.
+This was either made with a previous
+.Dq Let's Encrypt
+client or with
+.Fl n .
+.It Fl k Ar domainkey
+The private key for the domain.
+.It Ar domain
+The domain name.
+The only difference between this and the
+.Ar altnames
+is that it's put into the certificate's
+.Li CN
+field.
+.It Ar altnames
+Alternative names
+.Pq Dq SAN
+for the domain name.
+The number of SAN entries is limited by
+.Dq Let's Encrypt
+to 100 or so.
+.El
+.Pp
+The process by which
+.Nm
+obtains signed certificates is roughly as follows.
+In this, the
+.Dq CA
+is the ACME server for Let's Encrypt.
+See
+.Sx IMPLEMENTATION NOTES
+for the details.
+.Bl -enum
+.It
+Access the CA (unauthenticated) and requests its list of resources.
+.It
+Optionally create and register a new RSA account key.
+.It
+Read and process the RSA account key.
+This is used to authenticate each subsequent communication to the CA.
+.It
+For each domain name,
+.Bl -enum
+.It
+submit a challenge for authentication to the CA,
+.It
+create a challenge response file,
+.It
+wait until the CA has verified the challenge.
+.El
+.It
+Read and extract the RSA domain key.
+.It
+Create an X509 request from the doman key for the domain and its
+alternative names.
+.It
+Submit a request for signature to the CA.
+.It
+Download the signed X509 certificate.
+.It
+Extract the CA issuer from the X509 certificate.
+.It
+Download the certificate chain from the issuer.
+.El
+.
+.
+.Ss Challenges
+Let's Encrypt uses challenges to verify that the submitter has access to
+the registered domains.
+.Nm
+implements only the
+.Dq http-01
+challenge type, where a file is created within a directory accessible by
+a locally-run web server configured for the requested domain.
+For example, for the domain
+.Dq foo.com
+and alternate
+.Dq www.foo.com
+and the default challenge directory, an Apache configuration snippet
+might be as follows:
+.Bd -literal
+<VirtualHost *:80>
+  [...]
+  ServerName foo.com
+  ServerAlias www.foo.com
+  Alias /.well-known/acme-challenge /var/www/letsencrypt
+  <Directory /var/www/letsencrypt>
+    Options None
+    AllowOverride None
+    Order allow,deny
+    Allow from all
+  </Directory>
+</VirtualHost>
+.Ed
+.Pp
+This way, the files placed in
+.Pa /var/www/letsencrypt
+will be properly mapped by the web server when the Let's Encrypt
+responds to a challenge.
+.
+.
+.Ss Certificates
+Public certificates (domain certificate, chain, and the full-chain) are
+placed by default in
+.Pa /etc/ssl/letsencrypt
+as
+.Pa cert.pem ,
+.Pa chain.pem ,
+and
+.Pa fullchain.pem ,
+respectively.
+These are all created as the root user with mode 444.
+.Pp
+An nginx configuration using these might be as follows:
+.Bd -literal
+server {
+  listen 443;
+  server_name foo.com www.foo.com;
+  [...]
+  ssl_certificate /etc/ssl/letsencrypt/fullchain.pem;
+  ssl_certificate_key /etc/ssl/letsencrypt/private/privkey.pem;
+}
+.Ed
+.Pp
+The
+.Pa cert.pem
+file, if found, is checked for its expiration: if more than 30 days from
+expiring,
+.Nm
+will not attempt to refresh the signature.
+.\" .Sh CONTEXT
+.\" For section 9 functions only.
+.Sh IMPLEMENTATION NOTES
+The
+.Nm
+utility follows a model of strict isolation between components.
+There are seven such components, each of which is started in a
+subprocess.
+Sandboxing is system-specific.
+.Bl -tag -width Ds
+.It DNS process.
+Manages domain name resolution.
+This is allowed full access to the file-system, but is privilege-dropped
+to the
+.Dq nobody
+user.
+On
+.Ox , 
+the sandbox ensures that only DNS lookups are made; however, other
+systems do not have this.
+This is due to weak (or overly complex) DNS resolution and/or
+sandboxing.
+.It Network process.
+Manages communication with the Let's Encrypt server.
+This process is sandboxed and jailed in
+.Pa /var/empty ,
+and drops user privileges to the
+.Dq nobody
+user.
+.It Certificate process.
+Translates certificates into PEM files and transfers them to the file
+process.
+Also extracts the CA issuer name from the certificate and transfers it
+to the network process for downloading.
+This process is sandboxed and jailed in
+.Pa /var/empty ,
+and drops user privileges to the
+.Dq nobody
+user.
+.It File process.
+Manages public certificate and certificate chain files.
+Each domain certificate is written into a temporary file then atomically
+renamed into the real certificate with
+.Xr rename 2 .
+This process is sandboxed and jailed in the certificate directory.
+.It Domain key process.
+Reads and parses the RSA private key for the domain.
+This is used for creating the X509 request.
+After opening the private key file, this is sandboxed and jailed in
+.Pa /var/empty ,
+and drops user privileges to the
+.Dq nobody
+user.
+.It Account key process.
+Reads and parses the RSA private key for the account.
+This is responsible for signing messages submitted by the network
+process and creating
+.Dq thumbprint
+digests used by the challenge process.
+After opening the private key file, this is sandboxed and jailed in
+.Pa /var/empty ,
+and drops user privileges to the
+.Dq nobody
+user.
+.It Challenge process.
+This process creates and deletes challenge files.
+It is sandboxed and jailed in the challenge directory.
+.It Revoke process.
+If found, reads and parses the X509 certificate to check whether it
+should be signed or not.
+After opening the certificate file, this is sandboxed and jailed in
+.Pa /var/empty ,
+and drops user privileges to the
+.Dq nobody
+user.
+.El
+.\" Not used in OpenBSD.
+.\" .Sh RETURN VALUES
+.\" For sections 2, 3, and 9 function return values only.
+.\" .Sh ENVIRONMENT
+.\" For sections 1, 6, 7, and 8 only.
+.\" .Sh FILES
+.\" .Sh EXIT STATUS
+.\" For sections 1, 6, and 8 only.
+.\" .Sh EXAMPLES
+.\" .Sh DIAGNOSTICS
+.\" For sections 1, 4, 6, 7, 8, and 9 printf/stderr messages only.
+.\" .Sh ERRORS
+.\" For sections 2, 3, 4, and 9 errno settings only.
+.Sh SEE ALSO
+.Xr openssl 1
+.\" .Sh STANDARDS
+.\" .Sh HISTORY
+.\" .Sh AUTHORS
+.Sh CAVEATS
+On Mac OS X and Linux, the DNS process is essentially unprotected except
+for a privilege drop.
+This is due to limitations in how DNS resolution occurs on these
+systems.
+Moreover, for Mac OS X, the sandbox for several components must be
+weakened from that of full-computation to no-network because the sandbox
+cannot be enacted within a
+.Xr chroot 2 .
+There is no sandbox at all for Linux. 
+.Pp
+In summary, running this on anything but OpenBSD is not advised.
+.Sh BUGS
+The challenge and certificate processes retain their privileges, as I'm
+not sure which credentials to use otherwise.
+.\" .Sh SECURITY CONSIDERATIONS
+.\" Not used in OpenBSD.
