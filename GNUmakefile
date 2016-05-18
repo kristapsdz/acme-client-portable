@@ -20,13 +20,11 @@ ifeq ($(shell uname), Linux)
 LIBJSON	 = -ljson
 LIBBSD	 = -lbsd
 OBJS	+= sandbox-null.o \
-	   compat-setproctitle.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
 OBJS	+= sandbox-darwin.o \
-	   compat-setproctitle.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 LIBJSON	 = -ljson-c
@@ -59,7 +57,7 @@ merge:
 		rc=$$? ; \
 		rm -f $$TMP1 $$TMP2 ; \
 		[ 0 -eq $$rc ] && continue ; \
-		diff -u $$f $$ff ; \
+		diff -u $$ff $$f | less ; \
 		/bin/echo -n "Replace [Y/n]: " ; \
 		read in ; \
 		if [ -z "$$in" -o "y" = "$$in" -o "Y" = "$$in" ]; then \

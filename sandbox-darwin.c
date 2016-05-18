@@ -18,13 +18,9 @@
 # include "config.h"
 #endif
 
-#include <errno.h>
+#include <err.h>
 #include <sandbox.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "extern.h"
 
@@ -42,7 +38,7 @@ sandbox_before(void)
 	case (COMP__MAX):
 		if (-1 == sandbox_init
 		    (kSBXProfileNoNetwork, SANDBOX_NAMED, NULL)) {
-			dowarnx("sandbox_init");
+			warnx("sandbox_init");
 			return(0);
 		}
 		break;
@@ -50,7 +46,7 @@ sandbox_before(void)
 	case (COMP_NET):
 		if (-1 == sandbox_init
 		    (kSBXProfileNoWrite, SANDBOX_NAMED, NULL)) {
-			dowarnx("sandbox_init");
+			warnx("sandbox_init");
 			return(0);
 		}
 		break;
