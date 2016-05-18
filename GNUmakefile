@@ -49,7 +49,14 @@ letskencrypt: $(OBJS)
 merge:
 	@for f in ../letskencrypt/*.[ch]; do \
 		ff=`basename $$f` ; \
-		cmp -i 80 $$f $$ff && continue ; \
+		TMP1=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
+		TMP2=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
+		tail -n+2 $$f > $$TMP1 ; \
+		tail -n+2 $$ff > $$TMP2 ; \
+		cmp $$TMP1 $$TMP2 ; \
+		rc=$$? ; \
+		rm -f $$TMP1 $$TMP2 ; \
+		[ 0 -eq $$rc ] && continue ; \
 		diff -u $$f $$ff ; \
 		/bin/echo -n "Replace [Y/n]: " ; \
 		read in ; \
