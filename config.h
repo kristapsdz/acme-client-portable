@@ -15,7 +15,6 @@
 # include <unistd.h>
 int	setresgid(gid_t, gid_t, gid_t);
 int	setresuid(gid_t, gid_t, gid_t);
-int	setproctitle(const char *, ...);
 #endif
 
 /*
