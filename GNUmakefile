@@ -23,7 +23,11 @@ else ifeq ($(shell uname), Darwin)
 OBJS	+= sandbox-darwin.o
 LIBJSON	 = -ljson-c
 else ifeq ($(shell uname), OpenBSD)
+ifeq ($(shell uname -r), 5.9)
 OBJS	+= sandbox-pledge.o
+else
+OBJS	+= sandbox-null.o
+endif
 LIBJSON	 = -ljson-c
 endif
 
