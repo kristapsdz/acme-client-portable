@@ -32,6 +32,9 @@ else
 OBJS	+= sandbox-null.o
 endif
 LIBJSON	 = -ljson-c
+else ifeq ($(shell uname), FreeBSD)
+OBJS	+= sandbox-null.o
+LIBJSON	 = -ljson-c
 endif
 
 letskencrypt: $(OBJS)
