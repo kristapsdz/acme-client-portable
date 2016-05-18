@@ -18,8 +18,6 @@
 # include "config.h"
 #endif
 
-#include <sys/param.h>
-
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -40,12 +38,12 @@ int
 sandbox_after(void)
 {
 
-#if OpenBSD >= 201605
 	switch (proccomp) {
 	case (COMP_ACCOUNT):
 	case (COMP_CERT):
 	case (COMP_KEY):
 	case (COMP_REVOKE):
+	case (COMP__MAX):
 		if (-1 == pledge("stdio", NULL)) {
 			dowarn("pledge");
 			return(0);
@@ -62,6 +60,7 @@ sandbox_after(void)
 			dowarn("pledge");
 			return(0);
 		}
+		break;
 	case (COMP_FILE):
 		/* 
 		 * XXX: rpath shouldn't be here, but it's tripped by the
@@ -74,15 +73,12 @@ sandbox_after(void)
 		}
 		break;
 	case (COMP_NET):
-		/* FIXME: these aren't necessary. */
-		if (-1 == pledge("stdio dns rpath inet", NULL)) {
+		/* rpath required by libcurl */
+		if (-1 == pledge("stdio inet rpath", NULL)) {
 			dowarn("pledge");
 			return(0);
 		}
 		break;
-	default:
-		break;
 	}
-#endif
 	return(1);
 }
