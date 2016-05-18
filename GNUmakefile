@@ -16,16 +16,21 @@ OBJS 	 = acctproc.o \
 	   util.o
 
 ifeq ($(shell uname), Linux)
+# Compiling on Linux.
 LIBJSON	 = -ljson
 LIBBSD	 = -lbsd
-OBJS	+= sandbox-null.o
+OBJS	+= sandbox-null.o \
+	   compat-setresuid.o \
+	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
-OBJS	+= sandbox-darwin.o
+# Compiling on Mac OS X.
+OBJS	+= sandbox-darwin.o \
+	   compat-setresuid.o \
+	   compat-setresgid.o
 LIBJSON	 = -ljson-c
 else ifeq ($(shell uname), OpenBSD)
-# 
-# Obviously this is a temporary solution!
-# 
+# Compiling on OpenBSD.
+# Obviously the following is a temporary solution...
 ifeq ($(shell uname -r), 5.9)
 OBJS	+= sandbox-pledge.o
 else
@@ -33,6 +38,7 @@ OBJS	+= sandbox-null.o
 endif
 LIBJSON	 = -ljson-c
 else ifeq ($(shell uname), FreeBSD)
+# Compiling on FreeBSD.
 OBJS	+= sandbox-null.o
 LIBJSON	 = -ljson-c
 endif
