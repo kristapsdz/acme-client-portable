@@ -20,11 +20,13 @@ ifeq ($(shell uname), Linux)
 LIBJSON	 = -ljson
 LIBBSD	 = -lbsd
 OBJS	+= sandbox-null.o \
+	   compat-setproctitle.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
 OBJS	+= sandbox-darwin.o \
+	   compat-setproctitle.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 LIBJSON	 = -ljson-c
