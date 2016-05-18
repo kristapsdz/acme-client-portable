@@ -1,9 +1,9 @@
 ## Synopsis
 
-This is the portable version of [letskencrypt](letskencrypt) that runs
+This is the portable version of [letskencrypt](https://github.com/kristapsdz/letskencrypt) that runs
 on Linux, Mac OS X, and FreeBSD.  The portable version has additional
 goop to allow compilation and secure operation.  Please see the main
-[letskencrypt](letskencrypt) repository for detailed information on
+[letskencrypt](https://github.com/kristapsdz/letskencrypt) repository for detailed information on
 operation.
 
 What are the differences?
