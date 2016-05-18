@@ -9,12 +9,13 @@
 #endif
 
 /*
- * Neither Linux nor Apple have this.
+ * Neither Linux nor Apple have these.
  */
 #if defined(__linux__) || defined(__APPLE__)
 # include <unistd.h>
 int	setresgid(gid_t, gid_t, gid_t);
 int	setresuid(gid_t, gid_t, gid_t);
+int	setproctitle(const char *, ...);
 #endif
 
 /*
