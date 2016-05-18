@@ -1,14 +1,20 @@
 ## Synopsis
 
 This is the portable version of [letskencrypt](letskencrypt), which is
-built for OpenBSD.  The portable version has additional goop to allow
-compilation and running (and system-specific security, such as using the
-Seatbelt sandbox instead of pledge) on Mac OS X and Linux.  Please see
-the main [letskencrypt](letskencrypt) repository for detailed
-information on operation.
+built for OpenBSD 5.9 and greater.  The portable version has additional
+goop to allow compilation and secure operation.  Please see the main
+[letskencrypt](letskencrypt) repository for detailed information on
+operation.
 
-This version is **not** as secure as the OpenBSD version.  This is due
-to deficiencies in the supported portable operating systems.  
+What are the differences?
+
+* Conditional support for OpenBSD's sandbox or Mac OS X.
+* Proper preprocessor flags for unlocking some Linux functions.
+* Different library names on Linux.
+* Uses GNU make instead of BSD make.
+
+This version tries its best to be secure, but some of its supported
+operating systems are hostile to security.
 
 On both Linux and Mac OS X, for example, the DNS resolution process is
 effectively run in the main file-system and un-sandboxed due to the
@@ -17,20 +23,23 @@ slew of mystery files in the former).
 
 Moreover, while the sandbox on Mac OS X (which is deprecated?) exists,
 its behaviour is not well-documented and, morever, is weakened to
-co-exist with the file-system jail.  On Linux, the sandbox does not
-exist as, for the time being, it's just too complicated.
-
-In all cases, *letskencrypt-portable* does the best it can do.
+co-exist with the file-system jail.  On Linux, the sandbox has not been
+implemented in *letskencrypt-portable*, as it's just too complicated.
 
 Anyway, if you have issues to report, please either post them here or
 e-mail them directly to me.  This repository is really just a read-only
 mirror of the main CVS repository.
 
+What can you do?
+
+* If you know Linux sandboxing, please have at it!  There's only one
+function to fill in.
+
 ## Installation
 
 To use *letskencrypt-portable*, just download and run `make` and `make
-install` in the usual way.  It should not require any additional tuning
-or teaking.
+install` in the usual way (GNU make).  It should not require any
+additional tuning or teaking.
 
 The software has several compile-time dependencies:
 [OpenSSL](https://openssl.org) or [LibreSSL](http://www.libressl.org),
