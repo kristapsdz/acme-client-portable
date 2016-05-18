@@ -41,7 +41,16 @@ letskencrypt: $(OBJS)
 	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBJSON) $(LIBBSD)
 
 merge:
-	cp -f ../letskencrypt/*.[ch] .
+	@for f in ../letskencrypt/*.[ch]; do \
+		ff=`basename $$f` ; \
+		cmp -i 80 $$f $$ff && continue ; \
+		diff -u $$f $$ff ; \
+		/bin/echo -n "Replace [Y/n]: " ; \
+		read in ; \
+		if [ -z "$$in" -o "y" = "$$in" -o "Y" = "$$in" ]; then \
+			cp -f $$f $$ff ; \
+		fi \
+	done
 
 install: letskencrypt
 	mkdir -p $(PREFIX)/bin
