@@ -1,7 +1,7 @@
 ## Synopsis
 
-This is the portable version of [letskencrypt](letskencrypt), which is
-built for OpenBSD 5.9 and greater.  The portable version has additional
+This is the portable version of [letskencrypt](letskencrypt) that runs
+on Linux, Mac OS X, and FreeBSD.  The portable version has additional
 goop to allow compilation and secure operation.  Please see the main
 [letskencrypt](letskencrypt) repository for detailed information on
 operation.
@@ -34,6 +34,7 @@ What can you do?
 
 * If you know Linux sandboxing, please have at it!  There's only one
 function to fill in.
+* Same with the FreeBSD sandbox.
 
 ## Installation
 
