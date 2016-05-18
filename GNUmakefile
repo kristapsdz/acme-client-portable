@@ -1,6 +1,6 @@
 .SUFFIXES: .dot .png .1 .1.html
 
-CFLAGS	+= -g -W -Wall -Wno-deprecated-declarations `curl-config --cflags` -DHAVE_CONFIG_H
+CFLAGS	+= -g -W -Wall `curl-config --cflags` -DHAVE_CONFIG_H
 OBJS 	 = acctproc.o \
 	   base64.o \
 	   certproc.o \
@@ -24,6 +24,8 @@ OBJS	+= sandbox-null.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
+# If we show deprecations, everything in openssl shows up.
+CFLAGS	+= -Wno-deprecated-declarations 
 OBJS	+= sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
