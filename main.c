@@ -156,6 +156,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_NET]) {
+		proccomp = COMP_NET;
 		close(key_fds[0]);
 		close(acct_fds[0]);
 		close(chng_fds[0]);
@@ -164,7 +165,6 @@ main(int argc, char *argv[])
 		close(file_fds[1]);
 		close(dns_fds[0]);
 		close(rvk_fds[0]);
-		proccomp = COMP_NET;
 		c = netproc(key_fds[1], acct_fds[1], 
 			chng_fds[1], cert_fds[1], 
 			dns_fds[1], rvk_fds[1], 
@@ -188,6 +188,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_KEY]) {
+		proccomp = COMP_KEY;
 		close(cert_fds[0]);
 		close(dns_fds[0]);
 		close(rvk_fds[0]);
@@ -195,7 +196,6 @@ main(int argc, char *argv[])
 		close(chng_fds[0]);
 		close(file_fds[0]);
 		close(file_fds[1]);
-		proccomp = COMP_KEY;
 		c = keyproc(key_fds[0], keyfile, 
 			nobody_uid, nobody_gid, 
 			(const char **)alts, altsz);
@@ -211,6 +211,7 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_ACCOUNT]) {
+		proccomp = COMP_ACCOUNT;
 		free(alts);
 		close(cert_fds[0]);
 		close(dns_fds[0]);
@@ -218,7 +219,6 @@ main(int argc, char *argv[])
 		close(chng_fds[0]);
 		close(file_fds[0]);
 		close(file_fds[1]);
-		proccomp = COMP_ACCOUNT;
 		c = acctproc(acct_fds[0], acctkey, 
 			newacct, nobody_uid, nobody_gid);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -232,13 +232,14 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_CHALLENGE]) {
+		proccomp = COMP_CHALLENGE;
+		warnx("testing");
 		free(alts);
 		close(cert_fds[0]);
 		close(dns_fds[0]);
 		close(rvk_fds[0]);
 		close(file_fds[0]);
 		close(file_fds[1]);
-		proccomp = COMP_CHALLENGE;
 		c = chngproc(chng_fds[0], chngdir, remote);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
@@ -251,11 +252,11 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_CERT]) {
+		proccomp = COMP_CERT;
 		free(alts);
 		close(dns_fds[0]);
 		close(rvk_fds[0]);
 		close(file_fds[1]);
-		proccomp = COMP_CERT;
 		c = certproc(cert_fds[0], file_fds[0],
 			nobody_uid, nobody_gid);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
@@ -270,10 +271,10 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_FILE]) {
+		proccomp = COMP_FILE;
 		free(alts);
 		close(dns_fds[0]);
 		close(rvk_fds[0]);
-		proccomp = COMP_FILE;
 		c = fileproc(file_fds[1], certdir);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
@@ -286,9 +287,9 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_DNS]) {
+		proccomp = COMP_DNS;
 		free(alts);
 		close(rvk_fds[0]);
-		proccomp = COMP_DNS;
 		c = dnsproc(dns_fds[0], nobody_uid, nobody_gid);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
 	}
@@ -301,8 +302,8 @@ main(int argc, char *argv[])
 		err(EXIT_FAILURE, "fork");
 
 	if (0 == pids[COMP_REVOKE]) {
-		free(alts);
 		proccomp = COMP_REVOKE;
+		free(alts);
 		c = revokeproc(rvk_fds[0], certdir, 
 			nobody_uid, nobody_gid, 
 			force, revoke);
@@ -314,15 +315,15 @@ main(int argc, char *argv[])
 	/* Jail: sandbox, file-system, user. */
 
 	if ( ! sandbox_before())
-		doerrx("sandbox_before");
+		errx(EXIT_FAILURE, "sandbox_before");
 	if (-1 == chroot(PATH_VAR_EMPTY))
-		doerr("%s: chroot", PATH_VAR_EMPTY);
+		err(EXIT_FAILURE, "%s: chroot", PATH_VAR_EMPTY);
 	if (-1 == chdir("/"))
-		doerr("/: chdir");
+		err(EXIT_FAILURE, "/: chdir");
 	if ( ! dropprivs(nobody_uid, nobody_gid))
-		doerrx("dropprivs");
+		errx(EXIT_FAILURE, "dropprivs");
 	if ( ! sandbox_after())
-		doerrx("sandbox_after");
+		errx(EXIT_FAILURE, "sandbox_after");
 
 	/*
 	 * Collect our subprocesses.

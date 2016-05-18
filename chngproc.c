@@ -22,6 +22,7 @@
 #include <sys/param.h>
 
 #include <assert.h>
+#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -54,13 +55,13 @@ chngproc(int netsock, const char *root, int remote)
 	/* File-system and sandbox jailing. */
 
 	if ( ! sandbox_before()) {
-		dowarnx("sandbox_before");
+		warnx("sandbox_before");
 		goto out;
 	} else if ( ! dropfs(root)) {
-		dowarnx("dropfs");
+		warnx("dropfs");
 		goto out;
 	} else if ( ! sandbox_after()) {
-		dowarnx("sandbox_after");
+		warnx("sandbox_after");
 		goto out;
 	}
 
@@ -77,7 +78,7 @@ chngproc(int netsock, const char *root, int remote)
 			op = lval;
 
 		if (CHNG__MAX == op) {
-			dowarnx("unknown operation from netproc");
+			warnx("unknown operation from netproc");
 			goto out;
 		} else if (CHNG_STOP == op)
 			break;
@@ -99,7 +100,7 @@ chngproc(int netsock, const char *root, int remote)
 
 		pp = realloc(fs, (fsz + 1) * sizeof(char *));
 		if (NULL == pp) {
-			dowarn("realloc");
+			warn("realloc");
 			goto out;
 		}
 		fs = pp;
@@ -108,7 +109,7 @@ chngproc(int netsock, const char *root, int remote)
 		fsz++;
 
 		if (-1 == asprintf(&fmt, "%s.%s", fs[fsz - 1], th)) {
-			dowarn("asprintf");
+			warn("asprintf");
 			goto out;
 		}
 
@@ -134,13 +135,13 @@ chngproc(int netsock, const char *root, int remote)
 			fd = open(fs[fsz - 1], 
 				O_WRONLY|O_EXCL|O_CREAT, 0444);
 			if (-1 == fd) {
-				dowarn("%s", fs[fsz - 1]);
+				warn("%s", fs[fsz - 1]);
 				goto out;
 			} if (-1 == write(fd, fmt, strlen(fmt))) {
-				dowarn("%s", fs[fsz - 1]);
+				warn("%s", fs[fsz - 1]);
 				goto out;
 			} else if (-1 == close(fd)) {
-				dowarn("%s", fs[fsz - 1]);
+				warn("%s", fs[fsz - 1]);
 				goto out;
 			}
 			fd = -1;
@@ -165,7 +166,7 @@ out:
 		close(fd);
 	for (i = 0; i < fsz; i++) {
 		if (-1 == unlink(fs[i]) && ENOENT != errno)
-			dowarn("%s", fs[i]);
+			warn("%s", fs[i]);
 		free(fs[i]);
 	}
 	free(fs);
