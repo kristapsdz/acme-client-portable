@@ -2,6 +2,8 @@
 # define _GNU_SOURCE
 # include <bsd/stdlib.h>
 # include <grp.h>
+int	setresgid(gid_t, gid_t, gid_t);
+int	setresuid(gid_t, gid_t, gid_t);
 #endif
 
 #ifdef __FreeBSD__
