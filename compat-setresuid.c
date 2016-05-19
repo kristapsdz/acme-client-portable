@@ -31,7 +31,7 @@ setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	/* All we accept. */
 	assert(ruid == euid && euid == suid);
 
-#ifdef	__APPLE__
+#if defined(__APPLE__) || defined(__linux__)
 	if (-1 == setreuid(euid, euid)) {
 		warn("setreuid");
 		return(-1);

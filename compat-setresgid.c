@@ -31,7 +31,7 @@ setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 	/* All we accept. */
 	assert(rgid == egid && egid == sgid);
 
-#ifdef	__APPLE__
+#if defined(__APPLE__) || defined(__linux__)
 	if (-1 == setregid(egid, egid)) {
 		warn("setregid");
 		return(-1);
