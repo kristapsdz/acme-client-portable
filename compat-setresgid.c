@@ -21,6 +21,7 @@
 #include <sys/types.h>
 
 #include <assert.h>
+#include <err.h>
 #include <unistd.h>
 
 int
@@ -30,10 +31,20 @@ setresgid(gid_t rgid, gid_t egid, gid_t sgid)
 	/* All we accept. */
 	assert(rgid == egid && egid == sgid);
 
-	if (-1 == setegid(egid))
+#ifdef	__APPLE__
+	if (-1 == setregid(egid, egid)) {
+		warn("setregid");
 		return(-1);
-	if (-1 == setgid(rgid))
+	}
+#else
+	if (-1 == setegid(egid)) {
+		warn("setegid");
 		return(-1);
+	} else if (-1 == setgid(rgid)) {
+		warn("setgid");
+		return(-1);
+	}
+#endif
 
 	return(0);
 }
