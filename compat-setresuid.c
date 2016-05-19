@@ -21,6 +21,7 @@
 #include <sys/types.h>
 
 #include <assert.h>
+#include <err.h>
 #include <unistd.h>
 
 int
@@ -30,10 +31,20 @@ setresuid(uid_t ruid, uid_t euid, uid_t suid)
 	/* All we accept. */
 	assert(ruid == euid && euid == suid);
 
-	if (-1 == seteuid(euid))
+#ifdef	__APPLE__
+	if (-1 == setreuid(euid, euid)) {
+		warn("setreuid");
 		return(-1);
-	if (-1 == setuid(euid))
+	}
+#else
+	if (-1 == seteuid(euid)) {
+		warn("seteuid");
 		return(-1);
+	} else if (-1 == setuid(euid)) {
+		warn("setuid");
+		return(-1);
+	}
+#endif
 
 	return(0);
 }
