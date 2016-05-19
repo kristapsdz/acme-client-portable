@@ -48,6 +48,25 @@ endif
 letskencrypt: $(OBJS)
 	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBJSON) $(LIBBSD)
 
+rmerge:
+	@for f in ../letskencrypt/*.[ch]; do \
+		ff=`basename $$f` ; \
+		TMP1=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
+		TMP2=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
+		tail -n+2 $$f > $$TMP1 ; \
+		tail -n+2 $$ff > $$TMP2 ; \
+		cmp $$TMP1 $$TMP2 ; \
+		rc=$$? ; \
+		rm -f $$TMP1 $$TMP2 ; \
+		[ 0 -eq $$rc ] && continue ; \
+		diff -u $$f $$ff | less ; \
+		/bin/echo -n "Replace [Y/n]: " ; \
+		read in ; \
+		if [ -z "$$in" -o "y" = "$$in" -o "Y" = "$$in" ]; then \
+			cp -f $$ff $$f ; \
+		fi \
+	done
+
 merge:
 	@for f in ../letskencrypt/*.[ch]; do \
 		ff=`basename $$f` ; \
