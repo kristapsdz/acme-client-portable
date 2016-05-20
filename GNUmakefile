@@ -1,5 +1,3 @@
-.SUFFIXES: .dot .png .1 .1.html
-
 CFLAGS	+= -g -W -Wall `curl-config --cflags` -DHAVE_CONFIG_H
 OBJS 	 = acctproc.o \
 	   base64.o \
