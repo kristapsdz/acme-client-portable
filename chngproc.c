@@ -44,7 +44,7 @@ chngproc(int netsock, const char *root, int remote)
 	char		**fs;
 	size_t		  i, fsz;
 	void		 *pp;
-	int		  fd;
+	int		  fd, cc;
 
 	rc = 0;
 	th = tok = fmt = NULL;
@@ -54,16 +54,12 @@ chngproc(int netsock, const char *root, int remote)
 
 	/* File-system and sandbox jailing. */
 
-	if ( ! sandbox_before()) {
-		warnx("sandbox_before");
+	if ( ! sandbox_before())
 		goto out;
-	} else if ( ! dropfs(root)) {
-		warnx("dropfs");
+	else if ( ! dropfs(root))
 		goto out;
-	} else if ( ! sandbox_after()) {
-		warnx("sandbox_after");
+	else if ( ! sandbox_after())
 		goto out;
-	}
 
 	/* 
 	 * Loop while we wait to get a thumbprint and token.
@@ -153,9 +149,15 @@ chngproc(int netsock, const char *root, int remote)
 
 		dodbg("%s/%s: created", root, fs[fsz - 1]);
 
-		/* Write our acknowledgement. */
+		/* 
+		 * Write our acknowledgement. 
+		 * Ignore reader failure.
+		 */
 
-		if (writeop(netsock, COMM_CHNG_ACK, CHNG_ACK) <= 0)
+		cc = writeop(netsock, COMM_CHNG_ACK, CHNG_ACK);
+		if (0 == cc)
+			break;
+		if (cc < 0)
 			goto out;
 	}
 

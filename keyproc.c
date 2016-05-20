@@ -94,28 +94,22 @@ keyproc(int netsock, const char *keyfile,
 
 	if (NULL == (f = fopen(keyfile, "r"))) {
 		warn("%s", keyfile);
-		goto error;
+		goto out;
 	}
 
 	/* File-system, user, and sandbox jail. */
 	
-	if ( ! sandbox_before()) {
-		warnx("sandbox_before");
-		goto error;
-	}
+	if ( ! sandbox_before())
+		goto out;
 
 	ERR_load_crypto_strings();
 
-	if ( ! dropfs(PATH_VAR_EMPTY)) {
-		warnx("dropfs");
-		goto error;
-	} else if ( ! dropprivs(uid, gid)) {
-		warnx("dropprivs");
-		goto error;
-	} else if ( ! sandbox_after()) {
-		warnx("sandbox_after");
-		goto error;
-	}
+	if ( ! dropfs(PATH_VAR_EMPTY))
+		goto out;
+	else if ( ! dropprivs(uid, gid))
+		goto out;
+	else if ( ! sandbox_after())
+		goto out;
 
 	/* 
 	 * Seed our PRNG with data from arc4random().
@@ -138,7 +132,7 @@ keyproc(int netsock, const char *keyfile,
 	r = PEM_read_RSAPrivateKey(f, NULL, NULL, NULL);
 	if (NULL == r) {
 		warnx("%s", keyfile);
-		goto error;
+		goto out;
 	}
 
 	fclose(f);
@@ -146,10 +140,10 @@ keyproc(int netsock, const char *keyfile,
 
 	if (NULL == (evp = EVP_PKEY_new())) {
 		warnx("EVP_PKEY_new");
-		goto error;
+		goto out;
 	} else if ( ! EVP_PKEY_assign_RSA(evp, r)) {
 		warnx("EVP_PKEY_assign_RSA");
-		goto error;
+		goto out;
 	} 
 
 	r = NULL;
@@ -161,24 +155,24 @@ keyproc(int netsock, const char *keyfile,
 
 	if (NULL == (x = X509_REQ_new())) {
 		warnx("X509_new");
-		goto error;
+		goto out;
 	} else if ( ! X509_REQ_set_pubkey(x, evp)) {
 		warnx("X509_set_pubkey");
-		goto error;
+		goto out;
 	}
 
 	/* Now specify the common name that we'll request. */
 
 	if (NULL == (name = X509_NAME_new())) {
 		warnx("X509_NAME_new");
-		goto error;
+		goto out;
 	} else if ( ! X509_NAME_add_entry_by_txt(name, "CN", 
 	           MBSTRING_ASC, (u_char *)alts[0], -1, -1, 0)) {
 		warnx("X509_NAME_add_entry_by_txt: CN=%s", alts[0]);
-		goto error;
+		goto out;
 	} else if ( ! X509_REQ_set_subject_name(x, name)) {
 		warnx("X509_req_set_issuer_name");
-		goto error;
+		goto out;
 	}
 
 	/* 
@@ -193,12 +187,12 @@ keyproc(int netsock, const char *keyfile,
 		nid = NID_subject_alt_name;
 		if (NULL == (exts = sk_X509_EXTENSION_new_null())) {
 			warnx("sk_X509_EXTENSION_new_null");
-			goto error;
+			goto out;
 		}
 		/* Initialise to empty string. */
 		if (NULL == (sans = strdup(""))) {
 			warn("strdup");
-			goto error;
+			goto out;
 		}
 		sansz = strlen(sans) + 1;
 
@@ -213,12 +207,12 @@ keyproc(int netsock, const char *keyfile,
 				i > 1 ? "," : "", alts[i]);
 			if (-1 == cc) {
 				warn("asprintf");
-				goto error;
+				goto out;
 			}
 			pp = realloc(sans, sansz + strlen(san));
 			if (NULL == sans) {
 				warn("realloc");
-				goto error;
+				goto out;
 			}
 			sans = pp;
 			sansz += strlen(san);
@@ -229,10 +223,10 @@ keyproc(int netsock, const char *keyfile,
 
 		if ( ! add_ext(exts, nid, sans)) {
 			warnx("add_ext");
-			goto error;
+			goto out;
 		} else if ( ! X509_REQ_add_extensions(x, exts)) {
 			warnx("X509_REQ_add_extensions");
-			goto error;
+			goto out;
 		}
 		sk_X509_EXTENSION_pop_free
 			(exts, X509_EXTENSION_free);
@@ -242,34 +236,38 @@ keyproc(int netsock, const char *keyfile,
 
 	if ( ! X509_REQ_sign(x, evp, EVP_sha256())) {
 		warnx("X509_sign");
-		goto error;
+		goto out;
 	} 
 
 	/* Now, serialise to DER, then base64. */
 
 	if ((len = i2d_X509_REQ(x, NULL)) < 0) {
 		warnx("i2d_X509");
-		goto error;
+		goto out;
 	} else if (NULL == (der = dercp = malloc(len))) {
 		warn("malloc");
-		goto error;
+		goto out;
 	} else if (len != i2d_X509_REQ(x, (u_char **)&dercp)) {
 		warnx("i2d_X509");
-		goto error;
+		goto out;
 	} else if (NULL == (der64 = base64buf_url(der, len))) {
 		warnx("base64buf_url");
-		goto error;
+		goto out;
 	}
 
-	/* Write that we're ready, then write. */
+	/* 
+	 * Write that we're ready, then write. 
+	 * We ignore reader-closed failure, as we're just going to roll
+	 * into the exit case anyway.
+	 */
        
-	if (writeop(netsock, COMM_KEY_STAT, KEY_READY) <= 0) 
-		goto error;
-	else if (writestr(netsock, COMM_CERT, der64) <= 0) 
-		goto error;
+	if (writeop(netsock, COMM_KEY_STAT, KEY_READY) < 0) 
+		goto out;
+	if (writestr(netsock, COMM_CERT, der64) < 0) 
+		goto out;
 
 	rc = 1;
-error:
+out:
 	close(netsock);
 	if (NULL != f)
 		fclose(f);
