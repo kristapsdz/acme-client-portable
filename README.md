@@ -1,12 +1,17 @@
 ## Synopsis
 
-This is the portable version of [letskencrypt](https://github.com/kristapsdz/letskencrypt) that runs
-on Linux, Mac OS X, and FreeBSD.  The portable version has additional
-goop to allow compilation and secure operation.  Please see the main
-[letskencrypt](https://github.com/kristapsdz/letskencrypt) repository for detailed information on
-operation.
+This is the portable version of
+[kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt)
+that runs on Linux, Mac OS X, and FreeBSD.  The portable version has
+additional goop to allow compilation and secure operation.  Please see
+the main [letskencrypt](https://github.com/kristapsdz/letskencrypt)
+repository for detailed information on operation.
 
-What are the differences?
+If you have issues to report, please either post them here or e-mail
+them directly to me.  This repository is really just a read-only mirror
+of the main CVS repository.
+
+What are the difference between this and the non-portable release?
 
 * Conditional support for OpenBSD's sandbox or Mac OS X.
 * Proper preprocessor flags for unlocking some Linux functions.
@@ -26,28 +31,11 @@ its behaviour is not well-documented and, morever, is weakened to
 co-exist with the file-system jail.  On Linux, the sandbox has not been
 implemented in *letskencrypt-portable*, as it's just too complicated.
 
-Anyway, if you have issues to report, please either post them here or
-e-mail them directly to me.  This repository is really just a read-only
-mirror of the main CVS repository.
-
 What can you do?
 
 * If you know Linux sandboxing, please have at it!  There's only one
 function to fill in.
 * Same with the FreeBSD sandbox.
-
-## Installation
-
-To use *letskencrypt-portable*, just download and run `make` and `make
-install` in the usual way (GNU make).  It should not require any
-additional tuning or teaking.
-
-The software has several compile-time dependencies:
-[OpenSSL](https://openssl.org) or [LibreSSL](http://www.libressl.org),
-[libcurl](https://curl.haxx.se/libcurl), and
-[json-c](https://github.com/json-c/json-c).
-
-For Linux, you'll also need [libbsd](https://libbsd.freedesktop.org).
 
 ## License
 
