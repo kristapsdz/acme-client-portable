@@ -9,11 +9,12 @@
 .\" Not used in OpenBSD.
 .Sh SYNOPSIS
 .Nm letskencrypt
-.Op Fl Fvn
+.Op Fl Fnrsv
 .Op Fl C Ar challengedir
 .Op Fl c Ar certdir
 .Op Fl f Ar accountkey
 .Op Fl k Ar domainkey
+.Op Fl u Ar user
 .Ar domain
 .Op Ar altnames...
 .Sh DESCRIPTION
@@ -26,9 +27,10 @@ and its alternate DNS names
 to a
 .Dq Let's Encrypt
 server for automated signing.
+It can also revoke previously-submitted signatures.
 It must be run as root.
 (Why?
-.Xr chroot 2 ) .
+.Xr chroot 2 . )
 .Pp
 By default, it uses
 .Pa /var/www/letsencrypt
@@ -44,16 +46,26 @@ and
 .Pa /etc/letsencrypt/privkey.pem
 for the account private key
 .Pq Fl f .
+It drops privileges to the
+.Dq nobody
+user.
 Its arguments are as follows:
 .Bl -tag -width Ds
-.It Fl v
-Verbose operation.
-Specify twice to also trace communication and data transfers.
 .It Fl F
 Force updating the certificate signature even if it's too soon.
 .It Fl n
 Create a new account key.
 This will fail if a file already exists in the account key's place.
+.It Fl r
+Revoke the X509 certificate found in
+.Sx Certificates .
+.It Fl s
+Use the
+.Dq Let's Encrypt
+staging server instead of the real thing.
+.It Fl v
+Verbose operation.
+Specify twice to also trace communication and data transfers.
 .It Fl C Ar challengedir
 Where to register challenges.
 See
@@ -72,6 +84,8 @@ client or with
 .Fl n .
 .It Fl k Ar domainkey
 The private key for the domain.
+.It Fl u Ar user
+User for dropping privileges.
 .It Ar domain
 The domain name.
 The only difference between this and the
@@ -129,8 +143,21 @@ Extract the CA issuer from the X509 certificate.
 .It
 Download the certificate chain from the issuer.
 .El
-.
-.
+.Pp
+The revocation sequence is similar:
+.Bl -enum
+.It
+Request list of resources, manage RSA account key as in the case for
+signing.
+.It
+Read and extract the X509 certificate (if found).
+.It
+Create an X509 revocation request.
+.It
+Submit a request for revocation to the CA.
+.It
+Remove the certificate, the chain, and the full-chain.
+.El
 .Ss Challenges
 Let's Encrypt uses challenges to verify that the submitter has access to
 the registered domains.
@@ -164,8 +191,6 @@ This way, the files placed in
 .Pa /var/www/letsencrypt
 will be properly mapped by the web server when the Let's Encrypt
 responds to a challenge.
-.
-.
 .Ss Certificates
 Public certificates (domain certificate, chain, and the full-chain) are
 placed by default in
@@ -207,10 +232,7 @@ Sandboxing is system-specific.
 .Bl -tag -width Ds
 .It DNS process.
 Manages domain name resolution.
-This is allowed full access to the file-system, but is privilege-dropped
-to the
-.Dq nobody
-user.
+This is allowed full access to the file-system, but is privilege-dropped.
 On
 .Ox , 
 the sandbox ensures that only DNS lookups are made; however, other
@@ -221,9 +243,7 @@ sandboxing.
 Manages communication with the Let's Encrypt server.
 This process is sandboxed and jailed in
 .Pa /var/empty ,
-and drops user privileges to the
-.Dq nobody
-user.
+and drops user privileges.
 .It Certificate process.
 Translates certificates into PEM files and transfers them to the file
 process.
@@ -231,9 +251,7 @@ Also extracts the CA issuer name from the certificate and transfers it
 to the network process for downloading.
 This process is sandboxed and jailed in
 .Pa /var/empty ,
-and drops user privileges to the
-.Dq nobody
-user.
+and drops user privileges.
 .It File process.
 Manages public certificate and certificate chain files.
 Each domain certificate is written into a temporary file then atomically
@@ -245,9 +263,7 @@ Reads and parses the RSA private key for the domain.
 This is used for creating the X509 request.
 After opening the private key file, this is sandboxed and jailed in
 .Pa /var/empty ,
-and drops user privileges to the
-.Dq nobody
-user.
+and drops user privileges.
 .It Account key process.
 Reads and parses the RSA private key for the account.
 This is responsible for signing messages submitted by the network
@@ -256,9 +272,7 @@ process and creating
 digests used by the challenge process.
 After opening the private key file, this is sandboxed and jailed in
 .Pa /var/empty ,
-and drops user privileges to the
-.Dq nobody
-user.
+and drops user privileges.
 .It Challenge process.
 This process creates and deletes challenge files.
 It is sandboxed and jailed in the challenge directory.
@@ -267,9 +281,7 @@ If found, reads and parses the X509 certificate to check whether it
 should be signed or not.
 After opening the certificate file, this is sandboxed and jailed in
 .Pa /var/empty ,
-and drops user privileges to the
-.Dq nobody
-user.
+and drops user privileges.
 .El
 .\" Not used in OpenBSD.
 .\" .Sh RETURN VALUES
@@ -289,18 +301,7 @@ user.
 .\" .Sh STANDARDS
 .\" .Sh HISTORY
 .\" .Sh AUTHORS
-.Sh CAVEATS
-On Mac OS X and Linux, the DNS process is essentially unprotected except
-for a privilege drop.
-This is due to limitations in how DNS resolution occurs on these
-systems.
-Moreover, for Mac OS X, the sandbox for several components must be
-weakened from that of full-computation to no-network because the sandbox
-cannot be enacted within a
-.Xr chroot 2 .
-There is no sandbox at all for Linux. 
-.Pp
-In summary, running this on anything but OpenBSD is not advised.
+.\" .Sh CAVEATS
 .Sh BUGS
 The challenge and certificate processes retain their privileges, as I'm
 not sure which credentials to use otherwise.
