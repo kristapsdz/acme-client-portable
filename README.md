@@ -1,15 +1,21 @@
 ## Synopsis
 
-This is the portable version of
-[kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt)
-that runs on Linux, Mac OS X, and FreeBSD.  The portable version has
-additional goop to allow compilation and secure operation.  Please see
-the main [letskencrypt](https://github.com/kristapsdz/letskencrypt)
-repository for detailed information on operation.
+*letskencrypt-portable* is yet another [Let's
+Encrypt](https://letsencrypt.org) client, but one with a strong focus on
+security.  **It is still under development**. 
 
-If you have issues to report, please either post them here or e-mail
-them directly to me.  This repository is really just a read-only mirror
-of the main CVS repository.
+See [kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt)
+for complete documentation and stable releases.
+
+This repository tracks
+[letskencrypt](https://github.com/kristapsdz/letskencrypt) and has
+additional goop to allow compilation and secure operation on Linux, Mac
+OS X, and FreeBSD (hence "-portable").
+
+This repository mirrors the master CVS repository: any source changes
+will occur on the master and be pushed periodically to GitHub.  If you
+have bug reports or patches, either file them here or e-mail them to me.
+Feature requests will be ignored unless joined by a patch.
 
 What are the difference between this and the non-portable release?
 
