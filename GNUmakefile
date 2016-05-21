@@ -48,7 +48,7 @@ letskencrypt: $(OBJS)
 	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBJSON) $(LIBBSD)
 
 rmerge:
-	@for f in ../letskencrypt/*.[ch]; do \
+	@for f in ../letskencrypt/*.[1ch]; do \
 		ff=`basename $$f` ; \
 		TMP1=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
 		TMP2=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
@@ -67,7 +67,7 @@ rmerge:
 	done
 
 merge:
-	@for f in ../letskencrypt/*.[ch]; do \
+	@for f in ../letskencrypt/*.[1ch]; do \
 		ff=`basename $$f` ; \
 		TMP1=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
 		TMP2=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
