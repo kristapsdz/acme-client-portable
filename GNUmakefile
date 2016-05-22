@@ -7,6 +7,7 @@ OBJS 	 = acctproc.o \
 	   dbg.o \
 	   dnsproc.o \
 	   fileproc.o \
+	   jsmn.o \
 	   json.o \
 	   keyproc.o \
 	   main.o \
@@ -16,7 +17,6 @@ OBJS 	 = acctproc.o \
 
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
-LIBJSON	 = -ljson
 LIBBSD	 = -lbsd
 OBJS	+= sandbox-null.o \
 	   compat-setresuid.o \
@@ -28,7 +28,6 @@ CFLAGS	+= -Wno-deprecated-declarations
 OBJS	+= sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
-LIBJSON	 = -ljson-c
 else ifeq ($(shell uname), OpenBSD)
 # Compiling on OpenBSD.
 # Obviously the following is a temporary solution...
@@ -37,15 +36,13 @@ OBJS	+= sandbox-pledge.o
 else
 OBJS	+= sandbox-null.o
 endif
-LIBJSON	 = -ljson-c
 else ifeq ($(shell uname), FreeBSD)
 # Compiling on FreeBSD.
 OBJS	+= sandbox-null.o
-LIBJSON	 = -ljson-c
 endif
 
 letskencrypt: $(OBJS)
-	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBJSON) $(LIBBSD)
+	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBBSD)
 
 rmerge:
 	@for f in ../letskencrypt/*.[1ch]; do \
@@ -92,6 +89,8 @@ install: letskencrypt
 	install -m 0644 letskencrypt.1 $(PREFIX)/man/man1
 
 $(OBJS): extern.h config.h
+
+jsmn.o json.o: jsmn.h
 
 clean:
 	rm -f letskencrypt $(OBJS)
