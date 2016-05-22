@@ -5,6 +5,7 @@
 #ifdef __linux__
 # define _GNU_SOURCE
 # include <bsd/stdlib.h>
+# include <bsd/string.h>
 # include <grp.h>
 #endif
 
