@@ -1,4 +1,4 @@
-PREFIX	 = /usr/local
+PREFIX	?= /usr/local
 CFLAGS	+= -g -W -Wall `curl-config --cflags` -DHAVE_CONFIG_H
 OBJS 	 = acctproc.o \
 	   base64.o \
