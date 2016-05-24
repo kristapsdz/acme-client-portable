@@ -4,13 +4,13 @@
 Encrypt](https://letsencrypt.org) client, but one with a strong focus on
 security.  **It is still under development**. 
 
-See [kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt)
-for complete documentation and stable releases.
-
-This repository tracks
-[letskencrypt](https://github.com/kristapsdz/letskencrypt) and has
-additional goop to allow compilation and secure operation on Linux, Mac
-OS X, and FreeBSD (hence "-portable").
+Please see
+[kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt) for
+stable releases: this repository is for current development of the
+portable branch, which tracks
+[letskencrypt](https://github.com/kristapsdz/letskencrypt) with goop to
+allow compilation and secure operation on Linux, Mac OS X, and FreeBSD
+(hence "-portable").
 
 This repository mirrors the master CVS repository: any source changes
 will occur on the master and be pushed periodically to GitHub.  If you
