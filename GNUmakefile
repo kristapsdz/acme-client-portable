@@ -41,6 +41,8 @@ OBJS	+= sandbox-null.o
 endif
 else ifeq ($(shell uname), FreeBSD)
 # Compiling on FreeBSD.
+CFLAGS	+= -I/usr/local/include
+LDFLAGS	+= -L/usr/local/lib
 OBJS	+= sandbox-null.o
 endif
 
