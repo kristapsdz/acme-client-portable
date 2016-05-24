@@ -1,5 +1,5 @@
 PREFIX	?= /usr/local
-CFLAGS	+= -g -W -Wall `curl-config --cflags` -DHAVE_CONFIG_H
+CFLAGS	+= -g -W -Wall -DHAVE_CONFIG_H
 OBJS 	 = acctproc.o \
 	   base64.o \
 	   certproc.o \
@@ -7,6 +7,7 @@ OBJS 	 = acctproc.o \
 	   dbg.o \
 	   dnsproc.o \
 	   fileproc.o \
+	   http.o \
 	   jsmn.o \
 	   json.o \
 	   keyproc.o \
@@ -18,13 +19,15 @@ OBJS 	 = acctproc.o \
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 LIBBSD	 = -lbsd
+CFLAGS	+= -I/usr/local/include/libressl
 OBJS	+= sandbox-null.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
 # If we show deprecations, everything in openssl shows up.
-CFLAGS	+= -Wno-deprecated-declarations 
+CFLAGS	+= -I/usr/local/opt/libressl/include -Wno-deprecated-declarations 
+LDFLAGS	+= -L/usr/local/opt/libressl/lib
 OBJS	+= sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
@@ -41,8 +44,10 @@ else ifeq ($(shell uname), FreeBSD)
 OBJS	+= sandbox-null.o
 endif
 
+all: letskencrypt
+
 letskencrypt: $(OBJS)
-	$(CC) -o $@ $(OBJS) -lssl -lcrypto `curl-config --libs` $(LIBBSD)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) -ltls -lssl -lcrypto $(LIBBSD)
 
 rmerge:
 	@for f in ../letskencrypt/*.[1ch]; do \
@@ -89,6 +94,8 @@ install: letskencrypt
 	install -m 0644 letskencrypt.1 $(PREFIX)/man/man1
 
 $(OBJS): extern.h config.h
+
+http.o netproc.o: http.h
 
 jsmn.o json.o: jsmn.h
 
