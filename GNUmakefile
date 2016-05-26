@@ -20,7 +20,8 @@ ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 LIBBSD	 = -lbsd
 CFLAGS	+= -I/usr/local/include/libressl
-OBJS	+= sandbox-null.o \
+OBJS	+= chroot-portable.o \
+	   sandbox-null.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), Darwin)
@@ -28,7 +29,8 @@ else ifeq ($(shell uname), Darwin)
 # If we show deprecations, everything in openssl shows up.
 CFLAGS	+= -I/usr/local/opt/libressl/include -Wno-deprecated-declarations 
 LDFLAGS	+= -L/usr/local/opt/libressl/lib
-OBJS	+= sandbox-darwin.o \
+OBJS	+= chroot-portable.o \
+	   sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 else ifeq ($(shell uname), OpenBSD)
@@ -37,13 +39,15 @@ else ifeq ($(shell uname), OpenBSD)
 ifeq ($(shell uname -r), 5.9)
 OBJS	+= sandbox-pledge.o
 else
-OBJS	+= sandbox-null.o
+OBJS	+= chroot-portable.o \
+	   sandbox-null.o
 endif
 else ifeq ($(shell uname), FreeBSD)
 # Compiling on FreeBSD.
 CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
-OBJS	+= sandbox-null.o
+OBJS	+= chroot-portable.o \
+	   sandbox-null.o
 endif
 
 all: letskencrypt
@@ -73,6 +77,11 @@ rmerge:
 merge:
 	@for f in ../letskencrypt/*.[1ch]; do \
 		ff=`basename $$f` ; \
+		if [ ! -f $$ff ]; then \
+			/bin/echo "Installed $$ff" ; \
+			cp $$f $$ff ; \
+			continue ; \
+		fi ; \
 		TMP1=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
 		TMP2=`mktemp /tmp/merge.XXXXXX` || exit 1 ; \
 		tail -n+2 $$f > $$TMP1 ; \
