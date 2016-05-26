@@ -46,16 +46,23 @@ int
 checkprivs(void)
 {
 
+	/*
+	 * Since we're using chroot() and dropping privileges, we need
+	 * to be root.
+	 * So sad...
+	 */
+
 	return(0 == getuid());
 }
 
-/*
- * Safely drop privileges into the given credentials.
- * Returns zero on failure, non-zero on success.
- */
 int
 dropprivs(uid_t uid, gid_t gid)
 {
+
+	/*
+	 * Safely drop privileges into the given credentials.
+	 * Pity we need to do this...
+	 */
 
 	if (setgroups(1, &gid) ||
 	    setresgid(gid, gid, gid) ||
