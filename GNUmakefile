@@ -20,7 +20,7 @@ ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 LIBBSD	 = -lbsd
 CFLAGS	+= -I/usr/local/include/libressl
-OBJS	+= chroot-portable.o \
+OBJS	+= util-portable.o \
 	   sandbox-null.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
@@ -29,7 +29,7 @@ else ifeq ($(shell uname), Darwin)
 # If we show deprecations, everything in openssl shows up.
 CFLAGS	+= -I/usr/local/opt/libressl/include -Wno-deprecated-declarations 
 LDFLAGS	+= -L/usr/local/opt/libressl/lib
-OBJS	+= chroot-portable.o \
+OBJS	+= util-portable.o \
 	   sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
@@ -39,14 +39,14 @@ else ifeq ($(shell uname), OpenBSD)
 ifeq ($(shell uname -r), 5.9)
 OBJS	+= sandbox-pledge.o
 else
-OBJS	+= chroot-portable.o \
+OBJS	+= util-portable.o \
 	   sandbox-null.o
 endif
 else ifeq ($(shell uname), FreeBSD)
 # Compiling on FreeBSD.
 CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
-OBJS	+= chroot-portable.o \
+OBJS	+= util-portable.o \
 	   sandbox-null.o
 endif
 
