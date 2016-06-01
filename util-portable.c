@@ -18,10 +18,16 @@
 # include "config.h"
 #endif
 
+#include <sys/types.h>
+
 #include <err.h>
+#include <pwd.h>
 #include <unistd.h>
 
 #include "extern.h"
+
+static	uid_t nobody_uid;
+static	gid_t nobody_gid;
 
 int
 dropfs(const char *path)
@@ -40,8 +46,24 @@ dropfs(const char *path)
 int
 checkprivs(void)
 {
+	struct passwd	 *passent;
 
-	return(0 == getuid());
+	/* We need root for our chroots. */
+
+	if (0 != getuid())
+		return(0);
+
+	/* We need this for our privdropping. */
+
+	passent = getpwnam(NOBODY_USER);
+	if (NULL == passent) {
+		warnx("%s: unknown user", NOBODY_USER);
+		return(0);
+	}
+
+	nobody_uid = passent->pw_uid;
+	nobody_gid = passent->pw_gid;
+	return(1);
 }
 
 int

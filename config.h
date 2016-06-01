@@ -1,3 +1,7 @@
+#ifndef NOBODY_USER
+# define NOBODY_USER "nobody"
+#endif
+
 /*
  * Require libbsd's stdlib.h for arc4random() etc.
  * Require <grp.h> for setgroups().
