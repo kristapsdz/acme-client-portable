@@ -119,7 +119,7 @@ host_dns(const char *s, struct addr *vec)
 }
 
 int
-dnsproc(int nfd, uid_t uid, gid_t gid)
+dnsproc(int nfd)
 {
 	int		 rc, cc;
 	char		*look, *last;
@@ -146,7 +146,7 @@ dnsproc(int nfd, uid_t uid, gid_t gid)
 
 	if ( ! sandbox_before())
 		goto out;
-	else if ( ! dropprivs(uid, gid))
+	else if ( ! dropprivs())
 		goto out;
 	else if ( ! sandbox_after()) 
 		goto out;

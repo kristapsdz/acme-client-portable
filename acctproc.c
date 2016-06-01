@@ -299,8 +299,7 @@ out:
 }
 
 int
-acctproc(int netsock, const char *acctkey, 
-	int newacct, uid_t uid, gid_t gid)
+acctproc(int netsock, const char *acctkey, int newacct)
 {
 	FILE		*f;
 	RSA		*r;
@@ -334,7 +333,7 @@ acctproc(int netsock, const char *acctkey,
 
 	if ( ! dropfs(PATH_VAR_EMPTY))
 		goto out;
-	else if ( ! dropprivs(uid, gid))
+	else if ( ! dropprivs())
 		goto out;
 	else if ( ! sandbox_after())
 		goto out;
