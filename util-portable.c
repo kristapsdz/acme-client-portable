@@ -26,8 +26,8 @@
 
 #include "extern.h"
 
-static	uid_t nobody_uid;
-static	gid_t nobody_gid;
+static	uid_t uid;
+static	gid_t gid;
 
 int
 dropfs(const char *path)
@@ -61,13 +61,13 @@ checkprivs(void)
 		return(0);
 	}
 
-	nobody_uid = passent->pw_uid;
-	nobody_gid = passent->pw_gid;
+	uid = passent->pw_uid;
+	gid = passent->pw_gid;
 	return(1);
 }
 
 int
-dropprivs(uid_t uid, gid_t gid)
+dropprivs(void)
 {
 
 	/*
