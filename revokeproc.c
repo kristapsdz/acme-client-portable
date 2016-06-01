@@ -104,8 +104,7 @@ X509expires(X509 *x)
 }
 
 int
-revokeproc(int fd, const char *certdir, 
-	uid_t uid, gid_t gid, int force, int revoke,
+revokeproc(int fd, const char *certdir, int force, int revoke,
 	const char *const *alts, size_t altsz)
 {
 	int		 rc, cc, i, extsz, ssz;
@@ -154,7 +153,7 @@ revokeproc(int fd, const char *certdir,
 
 	if ( ! dropfs(PATH_VAR_EMPTY))
 		goto out;
-	else if ( ! dropprivs(uid, gid))
+	else if ( ! dropprivs())
 		goto out;
 	else if ( ! sandbox_after())
 		goto out;

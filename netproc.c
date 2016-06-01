@@ -579,7 +579,7 @@ dofullchain(struct conn *c, const char *addr)
  */
 int
 netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
-	int newacct, int revoke, int staging, uid_t uid, gid_t gid, 
+	int newacct, int revoke, int staging, 
 	const char *const *alts, size_t altsz)
 {
 	int		 rc;
@@ -602,7 +602,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 		goto out;
 	else if ( ! dropfs(PATH_VAR_EMPTY))
 		goto out;
-	else if ( ! dropprivs(uid, gid))
+	else if ( ! dropprivs())
 		goto out;
 	else if ( ! sandbox_after())
 		goto out;

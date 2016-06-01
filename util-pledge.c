@@ -18,6 +18,7 @@
 # include "config.h"
 #endif
 
+#include <err.h>
 #include <unistd.h>
 
 #include "extern.h"
@@ -49,15 +50,16 @@ int
 checkprivs(void)
 {
 
+	/* Needed for chroot(2) calls in dropfs(). */
+
 	return(0 == getuid());
 }
 
 int
-dropprivs(uid_t uid, gid_t gid)
+dropprivs(void)
 {
 
-	(void)uid;
-	(void)gid;
+	/* Don't need to drop privileges like this. */
 
 	return(1);
 }
