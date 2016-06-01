@@ -1,3 +1,7 @@
+/*
+ * If your system doesn't use "nobody" as a privilege separated user,
+ * then change it here or in the GNUmakefile.
+ */
 #ifndef NOBODY_USER
 # define NOBODY_USER "nobody"
 #endif
