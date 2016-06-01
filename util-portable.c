@@ -27,11 +27,6 @@ int
 dropfs(const char *path)
 {
 
-	/*
-	 * Pity these systems have such a shitty or complicated security
-	 * model that we need to do this.
-	 */
-
 	if (-1 == chroot(path))
 		warn("%s: chroot", path);
 	else if (-1 == chdir("/")) 
@@ -46,12 +41,6 @@ int
 checkprivs(void)
 {
 
-	/*
-	 * Since we're using chroot() and dropping privileges, we need
-	 * to be root.
-	 * So sad...
-	 */
-
 	return(0 == getuid());
 }
 
@@ -61,7 +50,6 @@ dropprivs(uid_t uid, gid_t gid)
 
 	/*
 	 * Safely drop privileges into the given credentials.
-	 * Pity we need to do this...
 	 */
 
 	if (setgroups(1, &gid) ||
