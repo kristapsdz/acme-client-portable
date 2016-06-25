@@ -18,9 +18,9 @@
 #endif
 
 /*
- * Neither Linux nor Apple have these.
+ * Apple hasn't got these.
  */
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__APPLE__)
 # include <unistd.h>
 int	setresgid(gid_t, gid_t, gid_t);
 int	setresuid(gid_t, gid_t, gid_t);
