@@ -23,9 +23,7 @@ ifeq ($(shell uname), Linux)
 LIBBSD	 = -lbsd
 CFLAGS	+= -I/usr/local/include/libressl
 OBJS	+= util-portable.o \
-	   sandbox-null.o \
-	   compat-setresuid.o \
-	   compat-setresgid.o
+	   sandbox-null.o
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
 # If we show deprecations, everything in openssl shows up.
