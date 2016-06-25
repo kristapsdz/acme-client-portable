@@ -72,39 +72,58 @@ bn2string(const BIGNUM *bn)
 }
 
 /*
+ * Extract the relevant RSA components from the key and create the JSON
+ * thumbprint from them.
+ */
+static char *
+op_thumb_rsa(EVP_PKEY *pkey)
+{
+	char	*exp, *mod, *json;
+	RSA	*r;
+
+	exp = mod = json = NULL;
+
+	if (NULL == (r = EVP_PKEY_get1_RSA(pkey)))
+		warnx("EVP_PKEY_get1_RSA");
+	else if (NULL == (mod = bn2string(r->n)))
+		warnx("bn2string");
+	else if (NULL == (exp = bn2string(r->e)))
+		warnx("bn2string");
+	else if (NULL == (json = json_fmt_thumb_rsa(exp, mod)))
+		warnx("json_fmt_thumb_rsa");
+
+	free(exp);
+	free(mod);
+	return(json);
+}
+
+/*
  * The thumbprint operation is used for the challenge sequence.
  */
 static int
 op_thumbprint(int fd, EVP_PKEY *pkey)
 {
-	char		*exp, *mod, *thumb, *dig64;
+	char		*thumb, *dig64;
 	int		 rc;
 	unsigned int	 digsz;
 	unsigned char	*dig;
 
 	EVP_MD_CTX	*ctx;
-	RSA		*r;
 
 	rc = 0;
-	mod = exp = thumb = dig64 = NULL;
+	thumb = dig64 = NULL;
 	dig = NULL;
 	ctx = NULL;
 
-	if (NULL == (r = EVP_PKEY_get1_RSA(pkey))) {
-		warnx("EVP_PKEY_get1_RSA");
-		goto out;
-	} else if (NULL == (mod = bn2string(r->n))) {
-		warnx("bn2string");
-		goto out;
-	} else if (NULL == (exp = bn2string(r->e))) {
-		warnx("bn2string");
-		goto out;
-	}
-
 	/* Construct the thumbprint input itself. */
 
-	if (NULL == (thumb = json_fmt_thumb(exp, mod))) {
-		warnx("json_fmt_thumb");
+	switch (EVP_PKEY_type(pkey->type)) {
+	case EVP_PKEY_RSA:
+		if (NULL != (thumb = op_thumb_rsa(pkey)))
+			break;
+		goto out;
+	default:
+		warnx("EVP_PKEY_type: unknown key type");
 		goto out;
 	}
 
@@ -141,11 +160,43 @@ out:
 	if (NULL != ctx)
 		EVP_MD_CTX_destroy(ctx);
 
-	free(exp);
-	free(mod);
 	free(thumb);
 	free(dig);
 	free(dig64);
+	return(rc);
+}
+
+static int
+op_sign_rsa(char **head, char **prot, EVP_PKEY *pkey, const char *nonce)
+{
+	RSA	*r;
+	char	*exp, *mod;
+	int	rc;
+
+	*head = *prot = exp = mod = NULL;
+	rc = 0;
+
+	/* 
+	 * First, extract relevant portions of our private key. 
+	 * Then construct the public header. 
+	 * Finally, format the header combined with the nonce.
+	 */
+
+	if (NULL == (r = EVP_PKEY_get1_RSA(pkey)))
+		warnx("EVP_PKEY_get1_RSA");
+	else if (NULL == (mod = bn2string(r->n)))
+		warnx("bn2string");
+	else if (NULL == (exp = bn2string(r->e)))
+		warnx("bn2string");
+	else if (NULL == (*head = json_fmt_header_rsa(exp, mod)))
+		warnx("json_fmt_header_rsa");
+	else if (NULL == (*prot = json_fmt_protected_rsa(exp, mod, nonce)))
+		warnx("json_fmt_protected_rsa");
+	else
+		rc = 1;
+
+	free(exp);
+	free(mod);
 	return(rc);
 }
 
@@ -156,17 +207,16 @@ out:
 static int
 op_sign(int fd, EVP_PKEY *pkey)
 {
-	char		*exp, *mod, *nonce, *pay,
+	char		*nonce, *pay,
 			*pay64, *prot, *prot64, *head, 
 			*sign, *dig64, *fin;
 	int		 cc, rc;
 	unsigned int	 digsz;
 	unsigned char	*dig;
 	EVP_MD_CTX	*ctx;
-	RSA		*r;
 
 	rc = 0;
-	pay = nonce = mod = exp = head = fin =
+	pay = nonce = head = fin =
 		sign = prot = prot64 = pay64 = dig64 = NULL;
 	dig = NULL;
 	ctx = NULL;
@@ -178,19 +228,6 @@ op_sign(int fd, EVP_PKEY *pkey)
 	else if (NULL == (nonce = readstr(fd, COMM_NONCE))) 
 		goto out;
 
-	/* Extract relevant portions of our private key. */
-
-	if (NULL == (r = EVP_PKEY_get1_RSA(pkey))) {
-		warnx("EVP_PKEY_get1_RSA");
-		goto out;
-	} else if (NULL == (mod = bn2string(r->n))) {
-		warnx("bn2string");
-		goto out;
-	} else if (NULL == (exp = bn2string(r->e))) {
-		warnx("bn2string");
-		goto out;
-	} 
-	
 	/* Base64-encode the payload. */
 
 	if (NULL == (pay64 = base64buf_url(pay, strlen(pay)))) {
@@ -198,19 +235,19 @@ op_sign(int fd, EVP_PKEY *pkey)
 		goto out;
 	}
 
-	/* Construct the public header. */
-
-	if (NULL == (head = json_fmt_header(exp, mod))) {
-		warnx("json_fmt_header");
+	switch (EVP_PKEY_type(pkey->type)) {
+	case EVP_PKEY_RSA:
+		if ( ! op_sign_rsa(&head, &prot, pkey, nonce))
+			goto out;
+		break;
+	default:
+		warnx("EVP_PKEY_type");
 		goto out;
 	}
 
-	/* Now the header combined with the nonce, then base64. */
+	/* The header combined with the nonce, base64. */
 
-	if (NULL == (prot = json_fmt_protected(exp, mod, nonce))) {
-		warnx("json_fmt_protected");
-		goto out;
-	} else if (NULL == (prot64 = base64buf_url(prot, strlen(prot)))) {
+	if (NULL == (prot64 = base64buf_url(prot, strlen(prot)))) {
 		warnx("base64buf_url");
 		goto out;
 	}
@@ -272,8 +309,6 @@ out:
 	free(sign);
 	free(pay64);
 	free(nonce);
-	free(exp);
-	free(mod);
 	free(head);
 	free(prot);
 	free(prot64);
@@ -283,11 +318,39 @@ out:
 	return(rc);
 }
 
+/*
+ * Create an RSA key with the default KEY_BITS number of bits.
+ */
+static EVP_PKEY *
+key_create_rsa(void)
+{
+	EVP_PKEY_CTX	*ctx;
+	EVP_PKEY	*pkey;
+
+	ctx = NULL;
+	pkey = NULL;
+
+	if (NULL == (ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL)))
+		warnx("EVP_PKEY_CTX_new_id");
+	else if (EVP_PKEY_keygen_init(ctx) <= 0)
+		warnx("EVP_PKEY_keygen_init");
+	else if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, KEY_BITS) <= 0)
+		warnx("EVP_PKEY_set_rsa_keygen_bits");
+	else if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
+		warnx("EVP_PKEY_keygen");
+	else
+		dodbg("generated: RSA %d bits", KEY_BITS);
+
+	if (NULL != ctx)
+		EVP_PKEY_CTX_free(ctx);
+
+	return(pkey);
+}
+
 int
 acctproc(int netsock, const char *acctkey, int newacct)
 {
 	FILE		*f;
-	EVP_PKEY_CTX	*ctx;
 	EVP_PKEY	*pkey;
 	long		 lval;
 	enum acctop	 op;
@@ -295,7 +358,6 @@ acctproc(int netsock, const char *acctkey, int newacct)
 	int		 rc, cc;
 
 	f = NULL;
-	ctx = NULL;
 	pkey = NULL;
 	rc = 0;
 
@@ -335,28 +397,13 @@ acctproc(int netsock, const char *acctkey, int newacct)
 	}
 
 	if (newacct) {
-		if (NULL == (ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL))) {
-			warnx("EVP_PKEY_CTX_new_id");
+		if (NULL == (pkey = key_create_rsa()))
 			goto out;
-		} else if (EVP_PKEY_keygen_init(ctx) <= 0) {
-			warnx("EVP_PKEY_keygen_init");
-			goto out;
-		} else if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, KEY_BITS) <= 0) {
-			warnx("EVP_PKEY_set_rsa_keygen_bits");
-			goto out;
-		}
-		dodbg("%s: creating: %d bits", acctkey, KEY_BITS);
-		if (EVP_PKEY_keygen(ctx, &pkey) <= 0) {
-			warnx("EVP_PKEY_keygen");
-			goto out;
-		}
 		if ( ! PEM_write_PrivateKey
 		    (f, pkey, NULL, NULL, 0, NULL, NULL)) {
 			warnx("PEM_write_PrivateKey");
 			goto out;
 		}
-		EVP_PKEY_CTX_free(ctx);
-		ctx = NULL;
 	} else {
 		pkey = PEM_read_PrivateKey(f, NULL, NULL, NULL);
 		if (NULL == pkey) {
@@ -420,8 +467,6 @@ out:
 		fclose(f);
 	if (NULL != pkey)
 		EVP_PKEY_free(pkey);
-	if (NULL != ctx)
-		EVP_PKEY_CTX_free(ctx);
 	ERR_print_errors_fp(stderr);
 	ERR_free_strings();
 	return(rc);
