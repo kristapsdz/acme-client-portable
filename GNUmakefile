@@ -1,4 +1,6 @@
 PREFIX	?= /usr/local
+MAN1DIR	?= $(PREFIX)/man/man1
+BINDIR	?= $(PREFIX)/bin
 CFLAGS	+= -g -W -Wall -DHAVE_CONFIG_H
 OBJS 	 = acctproc.o \
 	   base64.o \
@@ -99,10 +101,10 @@ merge:
 	done
 
 install: letskencrypt
-	mkdir -p $(PREFIX)/bin
-	mkdir -p $(PREFIX)/man/man1
-	install -m 0755 letskencrypt $(PREFIX)/bin
-	install -m 0644 letskencrypt.1 $(PREFIX)/man/man1
+	mkdir -p $(MAN1DIR)
+	mkdir -p $(BINDIR)
+	install -m 0755 letskencrypt $(BINDIR)
+	install -m 0644 letskencrypt.1 $(MAN1DIR)
 
 $(OBJS): extern.h config.h
 
