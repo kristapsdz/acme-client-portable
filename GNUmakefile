@@ -44,12 +44,14 @@ OBJS	+= util-portable.o \
 endif
 else ifeq ($(shell uname), FreeBSD)
 # Compiling on FreeBSD.
+# LibreSSL is assumed to be in packages (/usr/local).
 CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
 OBJS	+= util-portable.o \
 	   sandbox-null.o
 else ifeq ($(shell uname), NetBSD)
 # Compiling on NetBSD.
+# LibreSSL is assumed to be in packages (/usr/pkg).
 CFLAGS	+= -I/usr/pkg/libressl/include
 LDFLAGS	+= -L/usr/pkg/libressl/lib
 OBJS	+= util-portable.o \
