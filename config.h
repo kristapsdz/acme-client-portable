@@ -18,9 +18,9 @@
 #endif
 
 /*
- * Apple hasn't got these.
+ * Apple and NetBSD haven't got these.
  */
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__NetBSD__)
 # include <unistd.h>
 int	setresgid(gid_t, gid_t, gid_t);
 int	setresuid(gid_t, gid_t, gid_t);
