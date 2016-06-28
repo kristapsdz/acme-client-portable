@@ -18,6 +18,10 @@ OBJS 	 = acctproc.o \
 	   revokeproc.o \
 	   util.o
 
+# All of the below should happen in a nice shell-script that does the
+# configuration for us and generate config.h.
+# However, for now this works fine.
+
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 LIBBSD	 = -lbsd
@@ -65,6 +69,7 @@ all: letskencrypt
 letskencrypt: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) -ltls -lssl -lcrypto $(LIBBSD)
 
+# This is for synchronising from -portable to the master.
 rmerge:
 	@for f in ../letskencrypt/*.[1ch]; do \
 		ff=`basename $$f` ; \
@@ -84,6 +89,7 @@ rmerge:
 		fi \
 	done
 
+# This is for synchronising from the master to -portable.
 merge:
 	@for f in ../letskencrypt/*.[1ch]; do \
 		ff=`basename $$f` ; \
@@ -122,5 +128,4 @@ jsmn.o json.o: jsmn.h
 
 clean:
 	rm -f letskencrypt $(OBJS)
-	rm -f letskencrypt.png letskencrypt.1.html
 	rm -rf letskencrypt.dSYM
