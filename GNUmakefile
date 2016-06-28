@@ -48,6 +48,14 @@ CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
 OBJS	+= util-portable.o \
 	   sandbox-null.o
+else ifeq ($(shell uname), NetBSD)
+# Compiling on NetBSD.
+CFLAGS	+= -I/usr/pkg/libressl/include
+LDFLAGS	+= -L/usr/pkg/libressl/lib
+OBJS	+= util-portable.o \
+	   sandbox-null.o \
+	   compat-setresuid.o \
+	   compat-setresgid.o
 endif
 
 all: letskencrypt
