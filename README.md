@@ -9,10 +9,10 @@ Please see
 stable releases: this repository is for current development of the
 portable branch, which tracks
 [letskencrypt](https://github.com/kristapsdz/letskencrypt) with goop to
-allow compilation and secure operation on Linux, Mac OS X, and FreeBSD
-(hence "-portable").
-You will, however, need [libbsd](https://libbsd.freedesktop.org/wiki/)
-to compile on Linux.
+allow compilation and secure operation on Linux, Mac OS X, NetBSD, and
+FreeBSD (hence "-portable").
+You will need [libressl](http://www.libressl.org/) on all systems and
+[libbsd](https://libbsd.freedesktop.org/wiki/) on Linux.
 
 This repository mirrors the master CVS repository: any source changes
 will occur on the master and be pushed periodically to GitHub.  If you
