@@ -115,10 +115,10 @@ merge:
 	done
 
 install: letskencrypt
-	mkdir -p $(MAN1DIR)
-	mkdir -p $(BINDIR)
-	install -m 0755 letskencrypt $(BINDIR)
-	install -m 0644 letskencrypt.1 $(MAN1DIR)
+	mkdir -p $(DESTDIR)$(MAN1DIR)
+	mkdir -p $(DESTDIR)$(BINDIR)
+	install -m 0755 letskencrypt $(DESTDIR)$(BINDIR)
+	install -m 0644 letskencrypt.1 $(DESTDIR)$(MAN1DIR)
 
 $(OBJS): extern.h config.h
 
