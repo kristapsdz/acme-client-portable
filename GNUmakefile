@@ -56,8 +56,8 @@ OBJS	+= util-portable.o \
 else ifeq ($(shell uname), NetBSD)
 # Compiling on NetBSD.
 # LibreSSL is assumed to be in packages (/usr/pkg).
-CFLAGS	+= -I/usr/pkg/libressl/include
-LDFLAGS	+= -L/usr/pkg/libressl/lib
+CFLAGS	+= $(shell pkg-config --cflags libtls 2>/dev/null || echo '-I/usr/pkg/libressl/include')
+LDFLAGS	+= $(shell pkg-config --libs libtls 2>/dev/null || echo '-L/usr/pkg/libressl/lib')
 OBJS	+= util-portable.o \
 	   sandbox-null.o \
 	   compat-setresuid.o \
