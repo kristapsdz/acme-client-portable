@@ -16,6 +16,7 @@ OBJS 	 = acctproc.o \
 	   main.o \
 	   netproc.o \
 	   revokeproc.o \
+	   rsa.o \
 	   util.o
 
 # All of the below should happen in a nice shell-script that does the
@@ -123,6 +124,8 @@ install: letskencrypt
 	install -m 0644 letskencrypt.1 $(DESTDIR)$(MAN1DIR)
 
 $(OBJS): extern.h config.h
+
+rsa.o acctproc.o: rsa.h
 
 http.o netproc.o: http.h
 
