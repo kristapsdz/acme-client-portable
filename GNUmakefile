@@ -125,7 +125,7 @@ install: letskencrypt
 
 $(OBJS): extern.h config.h
 
-rsa.o acctproc.o: rsa.h
+rsa.o acctproc.o keyproc.o: rsa.h
 
 http.o netproc.o: http.h
 
