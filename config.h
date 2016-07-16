@@ -7,6 +7,11 @@
 #endif
 
 /*
+ * You can define this if your system has its /var/empty elsewhere.
+ */
+/* #define PATH_VAR_EMPTY "/var/empty" */
+
+/*
  * Require libbsd's stdlib.h for arc4random() etc.
  * Require <grp.h> for setgroups().
  */
