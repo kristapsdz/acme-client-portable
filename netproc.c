@@ -32,7 +32,7 @@
 #define URL_REAL_CA "https://acme-v01.api.letsencrypt.org/directory"
 #define URL_STAGE_CA "https://acme-staging.api.letsencrypt.org/directory"
 #define URL_LICENSE "https://letsencrypt.org" \
-		    "/documents/LE-SA-v1.0.1-July-27-2015.pdf"
+		    "/documents/LE-SA-v1.1.1-August-1-2016.pdf"
 
 #define	RETRY_DELAY 5
 #define RETRY_MAX 10
@@ -131,7 +131,7 @@ url2host(const char *host, short *port, char **path)
 		free(url);
 		return(NULL);
 	}
- 
+
 	return(url);
 }
 
@@ -164,7 +164,7 @@ urlresolve(int fd, const char *host, struct source *v)
 			goto err;
 		else if (4 != lval && 6 != lval)
 			goto err;
-		else if (NULL == (addr = readstr(fd, COMM_DNSA))) 
+		else if (NULL == (addr = readstr(fd, COMM_DNSA)))
 			goto err;
 		v[i].family = lval;
 		v[i].ip = addr;
@@ -215,7 +215,7 @@ nreq(struct conn *c, const char *addr)
 
 	free(c->buf.buf);
 	c->buf.sz = g->bodypartsz;
-	c->buf.buf = malloc(c->buf.sz);	
+	c->buf.buf = malloc(c->buf.sz);
 	memcpy(c->buf.buf, g->bodypart, c->buf.sz);
 	http_get_free(g);
 	if (NULL == c->buf.buf) {
@@ -268,7 +268,7 @@ sreq(struct conn *c, const char *addr, const char *req)
 	}
 	http_get_free(g);
 
-	/* 
+	/*
 	 * Send the nonce and request payload to the acctproc.
 	 * This will create the proper JSON object we need.
 	 */
@@ -302,7 +302,7 @@ sreq(struct conn *c, const char *addr, const char *req)
 		return(-1);
 	}
 
-	g = http_get(src, (size_t)ssz, host, 
+	g = http_get(src, (size_t)ssz, host,
 		port, path, reqsn, strlen(reqsn));
 
 	free(host);
@@ -317,7 +317,7 @@ sreq(struct conn *c, const char *addr, const char *req)
 
 	free(c->buf.buf);
 	c->buf.sz = g->bodypartsz;
-	c->buf.buf = malloc(c->buf.sz);	
+	c->buf.buf = malloc(c->buf.sz);
 	memcpy(c->buf.buf, g->bodypart, c->buf.sz);
 	http_get_free(g);
 	if (NULL == c->buf.buf) {
@@ -365,7 +365,7 @@ donewreg(struct conn *c, const struct capaths *p)
  * On non-zero exit, fills in "chng" with the challenge.
  */
 static int
-dochngreq(struct conn *c, const char *alt, 
+dochngreq(struct conn *c, const char *alt,
 	struct chng *chng, const struct capaths *p)
 {
 	int		 rc;
@@ -385,7 +385,7 @@ dochngreq(struct conn *c, const char *alt,
 		warnx("%s: bad HTTP: %ld", p->newauthz, lc);
 	else if (NULL == (j = json_parse(c->buf.buf, c->buf.sz)))
 		warnx("%s: bad JSON object", p->newauthz);
-	else if ( ! json_parse_challenge(j, chng)) 
+	else if ( ! json_parse_challenge(j, chng))
 		warnx("%s: bad challenge", p->newauthz);
 	else
 		rc = 1;
@@ -414,7 +414,7 @@ dochngresp(struct conn *c, const struct chng *chng, const char *th)
 		warnx("json_fmt_challenge");
 	else if ((lc = sreq(c, chng->uri, req)) < 0)
 		warnx("%s: bad comm", chng->uri);
-	else if (200 != lc && 201 != lc && 202 != lc) 
+	else if (200 != lc && 201 != lc && 202 != lc)
 		warnx("%s: bad HTTP: %ld", chng->uri, lc);
 	else
 		rc = 1;
@@ -584,7 +584,7 @@ dofullchain(struct conn *c, const char *addr)
  */
 int
 netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
-	int newacct, int revoke, int staging, 
+	int newacct, int revoke, int staging,
 	const char *const *alts, size_t altsz)
 {
 	int		 rc;
@@ -603,7 +603,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 
 	/* File-system, user, and sandbox jail. */
 
-	if ( ! sandbox_before()) 
+	if ( ! sandbox_before())
 		goto out;
 	else if ( ! dropfs(PATH_VAR_EMPTY))
 		goto out;
@@ -612,7 +612,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 	else if ( ! sandbox_after())
 		goto out;
 
-	/* 
+	/*
 	 * Wait until the acctproc, keyproc, and revokeproc have started
 	 * up and are ready to serve us data.
 	 * There's no point in running if these don't work.
@@ -642,7 +642,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 	} else if (REVOKE_EXP != lval && REVOKE_OK != lval) {
 		warnx("unknown operation from revokeproc");
 		goto out;
-	} 
+	}
 
 	/* If our certificate is up-to-date, return now. */
 
@@ -650,7 +650,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 		rc = 1;
 		goto out;
 	}
-	
+
 	/* Allocate main state. */
 
 	chngs = calloc(altsz, sizeof(struct chng));
@@ -681,12 +681,12 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 	if (revoke) {
 		if (NULL == (cert = readstr(rfd, COMM_CSR)))
 			goto out;
-		if ( ! dorevoke(&c, paths.revokecert, cert)) 
+		if ( ! dorevoke(&c, paths.revokecert, cert))
 			goto out;
 		else if (writeop(cfd, COMM_CSR_OP, CERT_REVOKE) > 0)
 			rc = 1;
 		goto out;
-	} 
+	}
 
 	/* If new, register with the CA server. */
 
@@ -753,7 +753,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 			goto out;
 	}
 
-	/* 
+	/*
 	 * Write our acknowledgement that the challenges are over.
 	 * The challenge process will remove all of the files.
 	 */
@@ -771,14 +771,14 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 	 * copy, and ship that into the certificate process for copying.
 	 */
 
-	if ( ! docert(&c, paths.newcert, cert)) 
+	if ( ! docert(&c, paths.newcert, cert))
 		goto out;
 	else if (writeop(cfd, COMM_CSR_OP, CERT_UPDATE) <= 0)
 		goto out;
 	else if (writebuf(cfd, COMM_CSR, c.buf.buf, c.buf.sz) <= 0)
 		goto out;
 
-	/* 
+	/*
 	 * Read back the issuer from the certproc.
 	 * Then contact the issuer to get the certificate chain.
 	 * Write this chain directly back to the certproc.
