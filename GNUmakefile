@@ -27,6 +27,7 @@ ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 LIBBSD	 = -lbsd
 CFLAGS	+= -I/usr/local/include/libressl
+LDFLAGS += -L/usr/local/lib
 OBJS	+= util-portable.o \
 	   sandbox-null.o
 else ifeq ($(shell uname), Darwin)
