@@ -35,8 +35,9 @@ sandbox_before(void)
 }
 
 int
-sandbox_after(void)
+sandbox_after(int arg)
 {
 
+	(void)arg;
 	return(1);
 }
