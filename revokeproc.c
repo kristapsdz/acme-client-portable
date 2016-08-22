@@ -131,7 +131,7 @@ revokeproc(int fd, const char *certdir, int force, int revoke,
 	 * We allow "f" to be NULL IFF the cert doesn't exist yet.
 	 */
 
-	if (-1 == asprintf(&path, "%s/%s", certdir, CERT_PEM)) {
+	if (NULL == (path = doasprintf("%s/%s", certdir, CERT_PEM))) {
 		warn("asprintf");
 		goto out;
 	} else if (NULL == (f = fopen(path, "r")) && ENOENT != errno) {
@@ -150,7 +150,7 @@ revokeproc(int fd, const char *certdir, int force, int revoke,
 		goto out;
 	else if ( ! dropprivs())
 		goto out;
-	else if ( ! sandbox_after())
+	else if ( ! sandbox_after(0))
 		goto out;
 
 	/*
