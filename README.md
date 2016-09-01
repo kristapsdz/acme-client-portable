@@ -1,14 +1,17 @@
 ## Synopsis
 
-*letskencrypt-portable* is yet another [Let's
-Encrypt](https://letsencrypt.org) client, but one with a strong focus on
-security.  **It is still under development**. 
+*acme-client-portable* is yet another
+[ACME](https://letsencrypt.github.io/acme-spec/) client, specifically for
+[Let's Encrypt](https://letsencrypt.org), but one with a strong focus on
+security. 
+
+It was named *letskencrypt-portable* until version 0.1.11.
 
 Please see
-[kristaps.bsd.lv/letskencrypt](https://kristaps.bsd.lv/letskencrypt) for
+[kristaps.bsd.lv/acme-client](https://kristaps.bsd.lv/acme-client) for
 stable releases: this repository is for current development of the
 portable branch, which tracks
-[letskencrypt](https://github.com/kristapsdz/letskencrypt) with goop to
+[acme-client](https://github.com/kristapsdz/acme-client) with goop to
 allow compilation and secure operation on Linux, Mac OS X, NetBSD, and
 FreeBSD (hence "-portable").
 You will need [libressl](http://www.libressl.org/) on all systems and
@@ -37,7 +40,7 @@ slew of mystery files in the former).
 Moreover, while the sandbox on Mac OS X (which is deprecated?) exists,
 its behaviour is not well-documented and, morever, is weakened to
 co-exist with the file-system jail.  On Linux, the sandbox has not been
-implemented in *letskencrypt-portable*, as it's just too complicated.
+implemented in *acme-client-portable*, as it's just too complicated.
 
 What can you do?
 
