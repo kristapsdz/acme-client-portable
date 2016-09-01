@@ -68,9 +68,9 @@ OBJS	+= util-portable.o \
 	   compat-setresgid.o
 endif
 
-all: letskencrypt
+all: acme-client
 
-letskencrypt: $(OBJS)
+acme-client: $(OBJS)
 	$(CC) -o $@ $(OBJS) $(LDFLAGS) -ltls -lssl -lcrypto $(LIBBSD)
 
 # This is for synchronising from -portable to the master.
@@ -118,11 +118,11 @@ merge:
 		fi \
 	done
 
-install: letskencrypt
+install: acme-client
 	mkdir -p $(DESTDIR)$(MAN1DIR)
 	mkdir -p $(DESTDIR)$(BINDIR)
-	install -m 0755 letskencrypt $(DESTDIR)$(BINDIR)
-	install -m 0644 letskencrypt.1 $(DESTDIR)$(MAN1DIR)
+	install -m 0755 acme-client $(DESTDIR)$(BINDIR)
+	install -m 0644 acme-client.1 $(DESTDIR)$(MAN1DIR)
 
 $(OBJS): extern.h config.h
 
@@ -133,5 +133,5 @@ http.o netproc.o: http.h
 jsmn.o json.o: jsmn.h
 
 clean:
-	rm -f letskencrypt $(OBJS)
-	rm -rf letskencrypt.dSYM
+	rm -f acme-client $(OBJS)
+	rm -rf acme-client.dSYM
