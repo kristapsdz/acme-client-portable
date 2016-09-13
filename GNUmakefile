@@ -43,9 +43,11 @@ else ifeq ($(shell uname), OpenBSD)
 # Compiling on OpenBSD.
 # Obviously the following is a temporary solution...
 ifeq ($(shell uname -r), 5.9)
-OBJS	+= sandbox-pledge.o
+OBJS	+= util-pledge.o \
+	   sandbox-pledge.o
 else ifeq ($(shell uname -r), 6.0)
-OBJS	+= sandbox-pledge.o
+OBJS	+= util-pledge.o \
+	   sandbox-pledge.o
 else
 OBJS	+= util-portable.o \
 	   sandbox-null.o
