@@ -17,8 +17,21 @@
  */
 #ifdef __linux__
 # define _GNU_SOURCE
-# include <bsd/stdlib.h>
-# include <bsd/string.h>
+# ifdef HAVE_LIBBSD
+#  include <bsd/stdlib.h>
+#  include <bsd/string.h>
+# else
+#  ifndef __BEGIN_DECLS
+#   define __BEGIN_DECLS
+#  endif
+#  ifndef __END_DECLS
+#   define __END_DECLS
+#  endif
+#  include <errno.h>
+   static inline const char *getprogname() {
+	return program_invocation_short_name;
+   }
+# endif
 # include <grp.h>
 #endif
 
@@ -41,3 +54,4 @@ int	setresuid(gid_t, gid_t, gid_t);
 #include <netinet/in.h>
 #include <resolv.h>
 #endif
+

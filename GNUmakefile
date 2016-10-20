@@ -25,7 +25,11 @@ OBJS 	 = acctproc.o \
 
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
+ifeq ($(shell $(CC) -dM -E - < /dev/null | grep __GLIBC__),__GLIBC__)
+# require libbsd for GNU libc, but not for musl libc
+CFLAGS  += -DHAVE_LIBBSD
 LIBBSD	 = -lbsd
+endif
 CFLAGS	+= -I/usr/local/include/libressl
 LDFLAGS += -L/usr/local/lib
 OBJS	+= util-portable.o \

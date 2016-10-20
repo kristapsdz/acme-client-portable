@@ -17,6 +17,8 @@
 #ifndef EXTERN_H
 #define EXTERN_H
 
+#include <unistd.h> /* for pid_t */
+
 #ifndef PATH_VAR_EMPTY
 #define	PATH_VAR_EMPTY "/var/empty"
 #endif
