@@ -17,8 +17,10 @@
  */
 #ifdef __linux__
 # define _GNU_SOURCE
-# include <bsd/stdlib.h>
-# include <bsd/string.h>
+# ifndef MUSL_LIBC
+#  include <bsd/stdlib.h>
+#  include <bsd/string.h>
+# endif
 # include <grp.h>
 #endif
 
@@ -40,4 +42,19 @@ int	setresuid(gid_t, gid_t, gid_t);
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <resolv.h>
+#endif
+
+#if !defined(__BEGIN_DECLS)
+#  ifdef __cplusplus
+#  define       __BEGIN_DECLS           extern "C" {
+#  else
+#  define       __BEGIN_DECLS
+#  endif
+#endif
+#if !defined(__END_DECLS)
+#  ifdef __cplusplus
+#  define       __END_DECLS             }
+#  else
+#  define       __END_DECLS
+#  endif
 #endif
