@@ -25,7 +25,12 @@ OBJS 	 = acctproc.o \
 
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
+ifeq ($(shell ldd --version 2>&1 | grep 'musl libc'),)
 LIBBSD	 = -lbsd
+else
+LIBBSD	 = 
+CFLAGS	+= -DMUSL_LIBC
+endif
 CFLAGS	+= -I/usr/local/include/libressl
 LDFLAGS += -L/usr/local/lib
 OBJS	+= util-portable.o \
