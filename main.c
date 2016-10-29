@@ -59,27 +59,23 @@ domain_valid(const char *cp)
 int
 main(int argc, char *argv[])
 {
-	const char	 *domain, *agreement, *challenge;
-	char		 *certdir, *acctkey, *chngdir, *keyfile,
+	const char	 *domain, *agreement = AGREEMENT, 
+	      		 *challenge = NULL;
+	const char	**alts = NULL;
+	char		 *certdir = NULL, *acctkey = NULL, 
+			 *chngdir = NULL, *keyfile = NULL,
 			 *keydir, *acctdir;
 	int		  key_fds[2], acct_fds[2], chng_fds[2],
 			  cert_fds[2], file_fds[2], dns_fds[2],
 			  rvk_fds[2];
+	int		  c, rc, newacct = 0, revocate = 0, force = 0,
+			  staging = 0, multidir = 0, newkey = 0, 
+			  backup = 0, build_certdir, build_ssldir, 
+			  build_acctdir;
 	pid_t		  pids[COMP__MAX];
-	int		  c, rc, newacct, revoke, force,
-			  staging, multidir, newkey, backup,
-			  build_certdir, build_ssldir, build_acctdir;
 	extern int	  verbose;
 	extern enum comp  proccomp;
 	size_t		  i, altsz, ne;
-	const char	**alts;
-
-	alts = NULL;
-	newacct = revoke = verbose = force = 
-		multidir = staging = newkey = backup = 0;
-	certdir = keyfile = acctkey = chngdir = NULL;
-	agreement = AGREEMENT;
-	challenge = NULL;
 
 	while (-1 != (c = getopt(argc, argv, "bFmnNrsva:f:c:C:k:t:"))) 
 		switch (c) {
@@ -122,7 +118,7 @@ main(int argc, char *argv[])
 			newkey = 1;
 			break;
 		case ('r'):
-			revoke = 1;
+			revocate = 1;
 			break;
 		case ('s'):
 			staging = 1;
@@ -313,7 +309,7 @@ main(int argc, char *argv[])
 		c = netproc(key_fds[1], acct_fds[1],
 		    chng_fds[1], cert_fds[1],
 		    dns_fds[1], rvk_fds[1],
-		    newacct, revoke, staging,
+		    newacct, revocate, staging,
 		    (const char *const *)alts, altsz,
 		    agreement, challenge);
 		free(alts);
@@ -450,7 +446,7 @@ main(int argc, char *argv[])
 	if (0 == pids[COMP_REVOKE]) {
 		proccomp = COMP_REVOKE;
 		c = revokeproc(rvk_fds[0], certdir,
-			force, revoke,
+			force, revocate,
 			(const char *const *)alts, altsz);
 		free(alts);
 		exit(c ? EXIT_SUCCESS : EXIT_FAILURE);
