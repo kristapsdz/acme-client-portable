@@ -20,6 +20,10 @@
 # ifndef MUSL_LIBC
 #  include <bsd/stdlib.h>
 #  include <bsd/string.h>
+# else
+#  include <errno.h>
+#  include <unistd.h>
+#  define getprogname() (program_invocation_short_name)
 # endif
 # include <grp.h>
 #endif
