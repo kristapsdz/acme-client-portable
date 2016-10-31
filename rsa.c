@@ -74,7 +74,10 @@ out:
 	return (pkey);
 }
 
-
+/*
+ * Load an RSA key into a public-key envelope.
+ * See key_load().
+ */
 EVP_PKEY *
 rsa_key_load(FILE *f, const char *fname)
 {
@@ -85,6 +88,29 @@ rsa_key_load(FILE *f, const char *fname)
 		warnx("%s: PEM_read_PrivateKey", fname);
 		return (NULL);
 	} else if (EVP_PKEY_RSA == EVP_PKEY_type(pkey->type))
+		return (pkey);
+
+	warnx("%s: unsupported key type", fname);
+	EVP_PKEY_free(pkey);
+	return (NULL);
+}
+
+/*
+ * Load an RSA or ECSDA key into a public-key envelope.
+ */
+EVP_PKEY *
+key_load(FILE *f, const char *fname)
+{
+	EVP_PKEY	*pkey;
+
+	pkey = PEM_read_PrivateKey(f, NULL, NULL, NULL);
+	if (NULL == pkey) {
+		warnx("%s: PEM_read_PrivateKey", fname);
+		return (NULL);
+	} 
+	
+	if (EVP_PKEY_RSA == EVP_PKEY_type(pkey->type) ||
+	    EVP_PKEY_EC == EVP_PKEY_type(pkey->type))
 		return (pkey);
 
 	warnx("%s: unsupported key type", fname);
