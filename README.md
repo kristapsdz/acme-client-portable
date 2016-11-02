@@ -48,6 +48,19 @@ What can you do?
 function to fill in.
 * Same with the FreeBSD sandbox.
 
+## Configuration
+
+Since your system might not be one of the tested ones (older OpenBSD,
+FreeBSD, Linux, Linux with musl libc, etc.), you may need to tune some
+of the values in the [GNUmakefile](GNUmakefile) or [config.h](config.h).
+
+In the former, you can adjust system-specific compilation flags.
+
+In the latter, you can set the `NOBODY_USER` value to be the name of an
+unprivileged user for privilege dropping.
+You can also set `DEFAULT_CA_FILE` for the location of the certificate
+file loaded by libtls.
+
 ## License
 
 Sources use the ISC (like OpenBSD) license.  See the
