@@ -38,6 +38,16 @@ int	setresuid(gid_t, gid_t, gid_t);
 #endif
 
 /*
+ * Apple usually gets their libressl from homebrew.
+ * It'd be put in here, but let it be overriden.
+ */
+#if defined(__APPLE__)
+# ifndef DEFAULT_CA_FILE
+#  define DEFAULT_CA_FILE "/usr/local/etc/libressl/cert.pem"
+# endif
+#endif
+
+/*
  * FreeBSD goop.
  */
 #ifdef __FreeBSD__
