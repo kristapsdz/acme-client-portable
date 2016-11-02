@@ -46,7 +46,6 @@ int	setresuid(gid_t, gid_t, gid_t);
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <resolv.h>
-#define __dead __dead2
 #endif
 
 #if !defined(__BEGIN_DECLS)
