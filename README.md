@@ -60,6 +60,8 @@ In the latter, you can set the `NOBODY_USER` value to be the name of an
 unprivileged user for privilege dropping.
 You can also set `DEFAULT_CA_FILE` for the location of the certificate
 file loaded by libtls.
+There's also `PATH_VAR_EMPTY`, which should be an empty directory into
+which we can create our jail.
 
 ## License
 
