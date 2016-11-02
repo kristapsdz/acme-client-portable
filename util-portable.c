@@ -22,6 +22,7 @@
 
 #include <err.h>
 #include <pwd.h>
+#include <tls.h>
 #include <unistd.h>
 
 #include "extern.h"
@@ -33,6 +34,16 @@ int
 dropfs(const char *path)
 {
 
+#if TLS_API < 20160801
+	/*
+	 * Old implementations of libtls won't work within 
+	 * a chroot: the certificate is "lazy" loaded after
+	 * the file-system chroot.
+	 */
+#warning You are using an old version of libtls!
+	if (COMP_NET == proccomp)
+		return(1);
+#endif
 	if (-1 == chroot(path))
 		warn("%s: chroot", path);
 	else if (-1 == chdir("/")) 
