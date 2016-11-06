@@ -24,7 +24,8 @@ Feature requests will be ignored unless joined by a patch.
 
 What are the difference between this and the non-portable release?
 
-* Conditional support for OpenBSD's sandbox or Mac OS X.
+* Conditional support for OpenBSD's sandbox, Mac OS X, or seccomp (via
+  (libseccomp)[https://github.com/seccomp/libseccomp]).
 * Proper preprocessor flags for unlocking some Linux functions.
 * Different library names on Linux.
 * Uses GNU make instead of BSD make.
@@ -39,14 +40,7 @@ slew of mystery files in the former).
 
 Moreover, while the sandbox on Mac OS X (which is deprecated?) exists,
 its behaviour is not well-documented and, morever, is weakened to
-co-exist with the file-system jail.  On Linux, the sandbox has not been
-implemented in *acme-client-portable*, as it's just too complicated.
-
-What can you do?
-
-* If you know Linux sandboxing, please have at it!  There's only one
-function to fill in.
-* Same with the FreeBSD sandbox.
+co-exist with the file-system jail.
 
 ## Configuration
 
