@@ -26,15 +26,18 @@ OBJS 	 = acctproc.o \
 ifeq ($(shell uname), Linux)
 # Compiling on Linux.
 ifeq ($(shell ldd --version 2>&1 | grep 'musl libc'),)
-LIBBSD	 = -lbsd
+LIBADD	+= -lbsd
 else
-LIBBSD	 = 
 CFLAGS	+= -DMUSL_LIBC
 endif
 CFLAGS	+= -I/usr/local/include/libressl
 LDFLAGS += -L/usr/local/lib
-OBJS	+= util-portable.o \
-	   sandbox-null.o
+OBJS	+= util-portable.o
+
+OBJS	+= sandbox-null.o
+# Do we have libseccomp installed?
+#OBJS	+= sandbox-seccomp.o
+#LIBADD	+= -lseccomp
 else ifeq ($(shell uname), Darwin)
 # Compiling on Mac OS X.
 # If we show deprecations, everything in openssl shows up.
@@ -78,7 +81,7 @@ endif
 all: acme-client
 
 acme-client: $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS) -ltls -lssl -lcrypto $(LIBBSD)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) -ltls -lssl -lcrypto $(LIBADD)
 
 # This is for synchronising from -portable to the master.
 rmerge:

@@ -35,7 +35,6 @@
 static int
 sandbox_allow(scmp_filter_ctx ctx, int call)
 {
-	int	 rc;
 
 	if (0 == seccomp_rule_add(ctx, SCMP_ACT_ALLOW, call, 0))
 		return(1);
@@ -57,6 +56,8 @@ int
 sandbox_after(int arg)
 {
 	scmp_filter_ctx	 ctx;
+
+	(void)arg;
 
 	switch (proccomp) {
 	case (COMP_ACCOUNT):
