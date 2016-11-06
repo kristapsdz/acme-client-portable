@@ -36,7 +36,8 @@ ifeq ($(shell uname), Linux)
 # the functions other systems require from libbsd.
 
 ifeq ($(shell ldd --version 2>&1 | grep 'musl libc'),)
-LIBADD	+= $(pkg-config --libs libbsd)
+LIBADD	+= $(shell pkg-config --libs libbsd)
+CFLAGS	+= $(shell pkg-config --cflags libbsd)
 else
 CFLAGS	+= -DMUSL_LIBC
 endif
@@ -50,7 +51,8 @@ OBJS	+= util-portable.o
 
 ifeq ($(shell pkg-config --exists libseccomp && echo 1),1)
 OBJS	+= sandbox-seccomp.o
-LIBADD	+= -lseccomp
+LIBADD	+= $(shell pkg-config --libs libseccomp)
+CFLAGS	+= $(shell pkg-config --cflags libseccomp)
 else
 OBJS	+= sandbox-null.o
 endif
