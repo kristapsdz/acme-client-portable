@@ -42,6 +42,36 @@ sandbox_allow(scmp_filter_ctx ctx, int call)
 	return(0);
 }
 
+static int
+sandbox_allow_cpath(scmp_filter_ctx ctx)
+{
+
+	if ( ! sandbox_allow(ctx, SCMP_SYS(open)))
+		return(0);
+	return(1);
+}
+
+static int
+sandbox_allow_stdio(scmp_filter_ctx ctx)
+{
+
+	if ( ! sandbox_allow(ctx, SCMP_SYS(write)))
+		return(0);
+	if ( ! sandbox_allow(ctx, SCMP_SYS(read)))
+		return(0);
+	if ( ! sandbox_allow(ctx, SCMP_SYS(getpid)))
+		return(0);
+#ifdef __NR_mmap
+	if ( ! sandbox_allow(ctx, SCMP_SYS(mmap)))
+		return(0);
+#endif
+	if ( ! sandbox_allow(ctx, SCMP_SYS(munmap)))
+		return(0);
+	if ( ! sandbox_allow(ctx, SCMP_SYS(sigprocmask)))
+		return(0);
+	return(1);
+}
+
 int
 sandbox_before(void)
 {
@@ -70,22 +100,20 @@ sandbox_after(int arg)
 			warn("seccomp_init");
 			return(0);
 		}
-		if ( ! sandbox_allow(ctx, SCMP_SYS(write)))
-			return(0);
-		if ( ! sandbox_allow(ctx, SCMP_SYS(read)))
-			return(0);
-		if ( ! sandbox_allow(ctx, SCMP_SYS(getpid)))
-			return(0);
-#ifdef __NR_mmap
-		if ( ! sandbox_allow(ctx, SCMP_SYS(mmap)))
-			return(0);
-#endif
-		if ( ! sandbox_allow(ctx, SCMP_SYS(munmap)))
-			return(0);
-		if ( ! sandbox_allow(ctx, SCMP_SYS(sigprocmask)))
+		if ( ! sandbox_allow_stdio(ctx))
 			return(0);
 		break;
 	case (COMP_CHALLENGE):
+		ctx = seccomp_init(SCMP_ACT_KILL);
+		if (NULL == ctx) {
+			warn("seccomp_init");
+			return(0);
+		}
+		if ( ! sandbox_allow_stdio(ctx))
+			return(0);
+		if ( ! arg && ! sandbox_allow_cpath(ctx))
+			return(0);
+		break;
 	case (COMP_DNS):
 	case (COMP_FILE):
 	case (COMP_NET):
