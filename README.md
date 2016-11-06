@@ -16,8 +16,8 @@ allow compilation and secure operation on Linux, Mac OS X, NetBSD, and
 FreeBSD (hence "-portable").
 You will need [libressl](http://www.libressl.org/) on all systems and
 [libbsd](https://libbsd.freedesktop.org/wiki/) on Linux (except for
-[muscl](https://www.musl-libc.org) systems like
-[Alpine](https://alpinelinux.org/).  Moreover, I strongly suggest you
+[musl](https://www.musl-libc.org) libc systems like
+[Alpine](https://alpinelinux.org/)).  Moreover, I strongly suggest you
 use [libseccomp](https://github.com/seccomp/libseccomp) if you want to
 use Linux sandboxing!
 
@@ -29,8 +29,7 @@ Feature requests will be ignored unless joined by a patch.
 What are the difference between this and the non-portable release?
 
 * Conditional support for OpenBSD's sandbox, Mac OS X, or
-  **experimentally** on Linux (via
-  [libseccomp](https://github.com/seccomp/libseccomp)).
+  **experimentally** (and to date incompletely) on Linux.
 * Proper preprocessor flags for unlocking some Linux functions.
 * Different library names on Linux.
 * Uses GNU make instead of BSD make.
