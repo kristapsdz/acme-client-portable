@@ -26,7 +26,7 @@ What are the difference between this and the non-portable release?
 
 * Conditional support for OpenBSD's sandbox, Mac OS X, or
   **experimentally** with seccomp (via
-  (libseccomp)[https://github.com/seccomp/libseccomp]).
+  [libseccomp](https://github.com/seccomp/libseccomp)).
 * Proper preprocessor flags for unlocking some Linux functions.
 * Different library names on Linux.
 * Uses GNU make instead of BSD make.
