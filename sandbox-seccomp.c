@@ -104,11 +104,11 @@ sandbox_after(int arg)
 			seccomp_release(ctx);
 			return(0);
 		}
-		if (0 != seccomp_load(ctx)) {
+		/*if (0 != seccomp_load(ctx)) {
 			warn("seccomp_load");
 			seccomp_release(ctx);
 			return(0);
-		}
+		}*/
 		seccomp_release(ctx);
 		break;
 	case (COMP_CHALLENGE):
@@ -125,11 +125,11 @@ sandbox_after(int arg)
 			seccomp_release(ctx);
 			return(0);
 		}
-		if (0 != seccomp_load(ctx)) {
+		/*if (0 != seccomp_load(ctx)) {
 			warn("seccomp_load");
 			seccomp_release(ctx);
 			return(0);
-		}
+		}*/
 		seccomp_release(ctx);
 		break;
 	case (COMP_DNS):
