@@ -1,3 +1,6 @@
+# If you end up changing anything significant in this makefile that's
+# not overly system-specific, please submit a bug report.
+
 PREFIX	?= /usr/local
 MAN1DIR	?= $(PREFIX)/man/man1
 BINDIR	?= $(PREFIX)/bin
@@ -24,32 +27,52 @@ OBJS 	 = acctproc.o \
 # However, for now this works fine.
 
 ifeq ($(shell uname), Linux)
+
 # Compiling on Linux.
+# Linux is the biggest "moving target" because there are lots of
+# variants and nits.
+
+# Start by checking whether we're on a musl libc system, which provides
+# the functions other systems require from libbsd.
+
 ifeq ($(shell ldd --version 2>&1 | grep 'musl libc'),)
-LIBADD	+= -lbsd
+LIBADD	+= $(pkg-config --libs libbsd)
 else
 CFLAGS	+= -DMUSL_LIBC
 endif
+
 CFLAGS	+= -I/usr/local/include/libressl
 LDFLAGS += -L/usr/local/lib
 OBJS	+= util-portable.o
 
-OBJS	+= sandbox-null.o
 # Do we have libseccomp installed?
-#OBJS	+= sandbox-seccomp.o
-#LIBADD	+= -lseccomp
+# If so, pull in the seccomp sandbox package.
+
+ifeq ($(shell pkg-config --exists libseccomp && echo 1),1)
+OBJS	+= sandbox-seccomp.o
+LIBADD	+= -lseccomp
+else
+OBJS	+= sandbox-null.o
+endif
+
 else ifeq ($(shell uname), Darwin)
+
 # Compiling on Mac OS X.
-# If we show deprecations, everything in openssl shows up.
+# If we show deprecations, everything in libressl shows up.
+
 CFLAGS	+= -I/usr/local/opt/libressl/include -Wno-deprecated-declarations 
 LDFLAGS	+= -L/usr/local/opt/libressl/lib
 OBJS	+= util-portable.o \
 	   sandbox-darwin.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
+
 else ifeq ($(shell uname), OpenBSD)
+
 # Compiling on OpenBSD.
-# Obviously the following is a temporary solution...
+# Obviously the following is a temporary solution... I'll remove it when
+# some of my systems no longer run 5.8 without pledge(2).
+
 ifeq ($(shell uname -r), 5.9)
 OBJS	+= util-pledge.o \
 	   sandbox-pledge.o
@@ -60,16 +83,22 @@ else
 OBJS	+= util-portable.o \
 	   sandbox-null.o
 endif
+
 else ifeq ($(shell uname), FreeBSD)
+
 # Compiling on FreeBSD.
 # LibreSSL is assumed to be in packages (/usr/local).
+
 CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
 OBJS	+= util-portable.o \
 	   sandbox-null.o
+
 else ifeq ($(shell uname), NetBSD)
+
 # Compiling on NetBSD.
 # LibreSSL is assumed to be in packages (/usr/pkg).
+
 CFLAGS	+= $(shell pkg-config --cflags libtls 2>/dev/null || echo '-I/usr/pkg/libressl/include')
 LDFLAGS	+= $(shell pkg-config --libs libtls 2>/dev/null || echo '-L/usr/pkg/libressl/lib')
 OBJS	+= util-portable.o \
@@ -77,6 +106,8 @@ OBJS	+= util-portable.o \
 	   compat-setresuid.o \
 	   compat-setresgid.o
 endif
+
+# If you need to change anything below here, it's a bug.
 
 all: acme-client
 
