@@ -100,8 +100,16 @@ sandbox_after(int arg)
 			warn("seccomp_init");
 			return(0);
 		}
-		if ( ! sandbox_allow_stdio(ctx))
+		if ( ! sandbox_allow_stdio(ctx)) {
+			seccomp_release(ctx);
 			return(0);
+		}
+		if (0 != seccomp_load(ctx)) {
+			warn("seccomp_load");
+			seccomp_release(ctx);
+			return(0);
+		}
+		seccomp_release(ctx);
 		break;
 	case (COMP_CHALLENGE):
 		ctx = seccomp_init(SCMP_ACT_KILL);
@@ -109,10 +117,20 @@ sandbox_after(int arg)
 			warn("seccomp_init");
 			return(0);
 		}
-		if ( ! sandbox_allow_stdio(ctx))
+		if ( ! sandbox_allow_stdio(ctx)) {
+			seccomp_release(ctx);
 			return(0);
-		if ( ! arg && ! sandbox_allow_cpath(ctx))
+		}
+		if ( ! arg && ! sandbox_allow_cpath(ctx)) {
+			seccomp_release(ctx);
 			return(0);
+		}
+		if (0 != seccomp_load(ctx)) {
+			warn("seccomp_load");
+			seccomp_release(ctx);
+			return(0);
+		}
+		seccomp_release(ctx);
 		break;
 	case (COMP_DNS):
 	case (COMP_FILE):
