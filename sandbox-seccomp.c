@@ -32,6 +32,39 @@
 
 #include "extern.h"
 
+static void
+sandbox_violation(int signum, 
+	siginfo_t *info, void *void_context)
+{
+
+	fprintf(stderr, 
+		"%s: unexpected system call "
+		"(arch:0x%x,syscall:%d @ %p)\n",
+		__func__, info->si_arch, 
+		info->si_syscall, info->si_call_addr);
+	exit(1);
+}
+
+static void
+sandbox_child_debugging(void)
+{
+	struct sigaction act;
+	sigset_t mask;
+
+	memset(&act, 0, sizeof(act));
+	sigemptyset(&mask);
+	sigaddset(&mask, SIGSYS);
+
+	act.sa_sigaction = &ssh_sandbox_violation;
+	act.sa_flags = SA_SIGINFO;
+	if (sigaction(SIGSYS, &act, NULL) == -1)
+		fprintf(stderr, "%s: sigaction(SIGSYS): %s\n", 
+			__func__, strerror(errno));
+	if (sigprocmask(SIG_UNBLOCK, &mask, NULL) == -1)
+		fprintf(stderr, "%s: sigprocmask(SIGSYS): %s\n",
+			__func__, strerror(errno));
+}
+
 static int
 sandbox_allow(scmp_filter_ctx ctx, int call)
 {
@@ -95,6 +128,7 @@ sandbox_after(int arg)
 	case (COMP_KEY):
 	case (COMP_REVOKE):
 	case (COMP__MAX):
+		sandbox_child_debugging();
 		ctx = seccomp_init(SCMP_ACT_KILL);
 		if (NULL == ctx) {
 			warn("seccomp_init");
@@ -104,14 +138,15 @@ sandbox_after(int arg)
 			seccomp_release(ctx);
 			return(0);
 		}
-		/*if (0 != seccomp_load(ctx)) {
+		if (0 != seccomp_load(ctx)) {
 			warn("seccomp_load");
 			seccomp_release(ctx);
 			return(0);
-		}*/
+		}
 		seccomp_release(ctx);
 		break;
 	case (COMP_CHALLENGE):
+		sandbox_child_debugging();
 		ctx = seccomp_init(SCMP_ACT_KILL);
 		if (NULL == ctx) {
 			warn("seccomp_init");
@@ -125,11 +160,11 @@ sandbox_after(int arg)
 			seccomp_release(ctx);
 			return(0);
 		}
-		/*if (0 != seccomp_load(ctx)) {
+		if (0 != seccomp_load(ctx)) {
 			warn("seccomp_load");
 			seccomp_release(ctx);
 			return(0);
-		}*/
+		}
 		seccomp_release(ctx);
 		break;
 	case (COMP_DNS):
