@@ -22,6 +22,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,12 +37,11 @@ static void
 sandbox_violation(int signum, 
 	siginfo_t *info, void *void_context)
 {
+	char cp[32];
 
-	fprintf(stderr, 
-		"%s: unexpected system call "
-		"(arch:0x%x,syscall:%d @ %p)\n",
-		__func__, info->si_arch, 
-		info->si_syscall, info->si_call_addr);
+	snprintf(cp, sizeof(cp), "%d-%d", proccomp, info->si_syscall);
+	write(STDERR_FILENO, cp, strlen(cp));
+	write(STDERR_FILENO, "\n", 1);
 	exit(1);
 }
 
@@ -55,7 +55,7 @@ sandbox_child_debugging(void)
 	sigemptyset(&mask);
 	sigaddset(&mask, SIGSYS);
 
-	act.sa_sigaction = &ssh_sandbox_violation;
+	act.sa_sigaction = &sandbox_violation;
 	act.sa_flags = SA_SIGINFO;
 	if (sigaction(SIGSYS, &act, NULL) == -1)
 		fprintf(stderr, "%s: sigaction(SIGSYS): %s\n", 
@@ -76,6 +76,20 @@ sandbox_allow(scmp_filter_ctx ctx, int call)
 }
 
 static int
+sandbox_allow_inet(scmp_filter_ctx ctx)
+{
+
+	if ( ! sandbox_allow(ctx, SCMP_SYS(socket)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(wait4)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(connect)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(nanosleep)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(close))) 
+		return(0);
+	return(1);
+}
+
+
+static int
 sandbox_allow_cpath(scmp_filter_ctx ctx)
 {
 
@@ -88,19 +102,26 @@ static int
 sandbox_allow_stdio(scmp_filter_ctx ctx)
 {
 
-	if ( ! sandbox_allow(ctx, SCMP_SYS(write)))
-		return(0);
-	if ( ! sandbox_allow(ctx, SCMP_SYS(read)))
-		return(0);
-	if ( ! sandbox_allow(ctx, SCMP_SYS(getpid)))
-		return(0);
-#ifdef __NR_mmap
-	if ( ! sandbox_allow(ctx, SCMP_SYS(mmap)))
-		return(0);
-#endif
-	if ( ! sandbox_allow(ctx, SCMP_SYS(munmap)))
-		return(0);
-	if ( ! sandbox_allow(ctx, SCMP_SYS(sigprocmask)))
+	if ( ! sandbox_allow(ctx, SCMP_SYS(getpid)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(gettimeofday)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(clock_gettime)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(time)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(read)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(readv)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(write)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(writev)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(close)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(brk)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(poll)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(select)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(madvise)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(mmap)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(mremap)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(munmap)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(exit_group)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(rt_sigaction)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(getrandom)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(sigprocmask)))
 		return(0);
 	return(1);
 }
@@ -129,7 +150,7 @@ sandbox_after(int arg)
 	case (COMP_REVOKE):
 	case (COMP__MAX):
 		sandbox_child_debugging();
-		ctx = seccomp_init(SCMP_ACT_KILL);
+		ctx = seccomp_init(SCMP_ACT_TRAP);
 		if (NULL == ctx) {
 			warn("seccomp_init");
 			return(0);
@@ -147,7 +168,7 @@ sandbox_after(int arg)
 		break;
 	case (COMP_CHALLENGE):
 		sandbox_child_debugging();
-		ctx = seccomp_init(SCMP_ACT_KILL);
+		ctx = seccomp_init(SCMP_ACT_TRAP);
 		if (NULL == ctx) {
 			warn("seccomp_init");
 			return(0);
@@ -168,8 +189,48 @@ sandbox_after(int arg)
 		seccomp_release(ctx);
 		break;
 	case (COMP_DNS):
+		break;
 	case (COMP_FILE):
+		sandbox_child_debugging();
+		ctx = seccomp_init(SCMP_ACT_TRAP);
+		if (NULL == ctx) {
+			warn("seccomp_init");
+			return(0);
+		}
+		if ( ! sandbox_allow_stdio(ctx)) {
+			seccomp_release(ctx);
+			return(0);
+		}
+		if ( ! arg && ! sandbox_allow_cpath(ctx)) {
+			seccomp_release(ctx);
+			return(0);
+		}
+		if (0 != seccomp_load(ctx)) {
+			warn("seccomp_load");
+			seccomp_release(ctx);
+			return(0);
+		}
+		seccomp_release(ctx);
+		break;
 	case (COMP_NET):
+		sandbox_child_debugging();
+		ctx = seccomp_init(SCMP_ACT_TRAP);
+		if (NULL == ctx) {
+			warn("seccomp_init");
+			return(0);
+		}
+		if ( ! sandbox_allow_stdio(ctx) ||
+		     ! sandbox_allow_inet(ctx) ||
+		     ! sandbox_allow_cpath(ctx)) {
+			seccomp_release(ctx);
+			return(0);
+		}
+		if (0 != seccomp_load(ctx)) {
+			warn("seccomp_load");
+			seccomp_release(ctx);
+			return(0);
+		}
+		seccomp_release(ctx);
 		break;
 	}
 	return(1);
