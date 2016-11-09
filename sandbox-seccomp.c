@@ -93,7 +93,8 @@ static int
 sandbox_allow_cpath(scmp_filter_ctx ctx)
 {
 
-	if ( ! sandbox_allow(ctx, SCMP_SYS(open)))
+	if ( ! sandbox_allow(ctx, SCMP_SYS(open)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(rename)))
 		return(0);
 	return(1);
 }
@@ -120,6 +121,8 @@ sandbox_allow_stdio(scmp_filter_ctx ctx)
 	     ! sandbox_allow(ctx, SCMP_SYS(munmap)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(exit_group)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(rt_sigaction)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(rt_sigprocmask)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(rt_sigreturn)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(getrandom)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(sigprocmask)))
 		return(0);
@@ -220,8 +223,7 @@ sandbox_after(int arg)
 			return(0);
 		}
 		if ( ! sandbox_allow_stdio(ctx) ||
-		     ! sandbox_allow_inet(ctx) ||
-		     ! sandbox_allow_cpath(ctx)) {
+		     ! sandbox_allow_inet(ctx)) {
 			seccomp_release(ctx);
 			return(0);
 		}
