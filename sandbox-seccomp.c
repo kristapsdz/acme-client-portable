@@ -82,8 +82,7 @@ sandbox_allow_inet(scmp_filter_ctx ctx)
 	if ( ! sandbox_allow(ctx, SCMP_SYS(socket)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(wait4)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(connect)) ||
-	     ! sandbox_allow(ctx, SCMP_SYS(nanosleep)) ||
-	     ! sandbox_allow(ctx, SCMP_SYS(close))) 
+	     ! sandbox_allow(ctx, SCMP_SYS(nanosleep)))
 		return(0);
 	return(1);
 }
@@ -94,6 +93,7 @@ sandbox_allow_cpath(scmp_filter_ctx ctx)
 {
 
 	if ( ! sandbox_allow(ctx, SCMP_SYS(open)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(unlink)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(rename)))
 		return(0);
 	return(1);
@@ -106,6 +106,7 @@ sandbox_allow_stdio(scmp_filter_ctx ctx)
 	if ( ! sandbox_allow(ctx, SCMP_SYS(getpid)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(gettimeofday)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(clock_gettime)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(close)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(time)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(read)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(readv)) ||
@@ -143,8 +144,6 @@ int
 sandbox_after(int arg)
 {
 	scmp_filter_ctx	 ctx;
-
-	(void)arg;
 
 	switch (proccomp) {
 	case (COMP_ACCOUNT):
