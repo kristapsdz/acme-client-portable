@@ -69,7 +69,7 @@ static	const char *const subps[COMP__MAX] = {
 	"revokeproc", /* COMP_REVOKE */
 };
 
-static	void xrun(enum comp, char **) __attribute__((noreturn));
+static	void xrun(enum comp, const char **) __attribute__((noreturn));
 
 /*
  * This isn't RFC1035 compliant, but does the bare minimum in making
@@ -124,39 +124,14 @@ xdup(int infd, int outfd)
  * subprocess of type "comp".
  */
 static void
-xrun(enum comp comp, char **newargs)
+xrun(enum comp comp, const char **newargs)
 {
 
-	newargs[2] = (char *)subps[comp];
+	newargs[2] = subps[comp];
 	execvp(newargs[0], (char *const *)newargs);
 	warn("%s", newargs[0]);
 	exit(EXIT_FAILURE);
 	/* NOTREACHED */
-}
-
-/*
- * Splice the argument "rm" from the array of arguments "nargs".
- * Require the "rm" exist.
- * This is an in-place modification using a dummy replacement.
- */
-static void
-spliceargs(char **nargs, size_t nargsz, char rm)
-{
-	size_t	 i;
-	char	*cp = NULL;
-
-	for (i = 0; i < nargsz; i++)  {
-		if (NULL == nargs[i])
-			continue;
-		if ('-' != nargs[i][0])
-			continue;
-		if (NULL == (cp = strchr(nargs[i], rm)))
-			continue;
-
-		/* Use our dummy value. */
-		*cp = 'X';
-		break;
-	}
 }
 
 int
@@ -164,8 +139,7 @@ main(int argc, char *argv[])
 {
 	const char	 *domain, *agreement = AGREEMENT, 
 	      		 *challenge = NULL, *sp = NULL;
-	const char	**alts = NULL;
-	char		**newargs = NULL;
+	const char	**alts = NULL, **newargs = NULL, *modval = NULL;
 	char		 *certdir = NULL, *acctkey = NULL, 
 			 *chngdir = NULL, *keyfile = NULL,
 			 *keydir, *acctdir;
@@ -189,19 +163,21 @@ main(int argc, char *argv[])
 	 * processes in the interests of simplicity.
 	 */
 
-	newargsz = (size_t)argc + 3; /* nil ptr, '-x', arg */
+	newargsz = (size_t)argc + 5; /* nil ptr, '-x', arg, -X, arg */
 	newargs = calloc(newargsz, sizeof(char *));
 	if (NULL == newargs)
 		err(EXIT_FAILURE, "calloc");
 	newargs[0] = argv[0];
 	newargs[1] = (char *)"-x";
 	/* newargs[2] = the_subprocess */
-	for (i = 1, j = 3; i < (size_t)argc; i++, j++)
+	newargs[3] = "-X";
+	newargs[4] = "";
+	for (i = 1, j = 5; i < (size_t)argc; i++, j++)
 		newargs[j] = argv[i];
 
 	/* Now parse arguments. */
 
-	while (-1 != (c = getopt(argc, argv, "beFmnNrsva:f:c:C:k:t:x:X"))) 
+	while (-1 != (c = getopt(argc, argv, "beFmnNrsva:f:c:C:k:t:x:X:"))) 
 		switch (c) {
 		case ('a'):
 			agreement = optarg;
@@ -258,7 +234,7 @@ main(int argc, char *argv[])
 			break;
 		case ('x'):
 			/*
-			 * Internally used: not to be documented.
+			 * XXX Internally used: not to be documented.
 			 * This flag dictates which subprocess is
 			 * currently running.
 			 */
@@ -266,10 +242,12 @@ main(int argc, char *argv[])
 			break;
 		case ('X'):
 			/*
-			 * We ignore this flag.
-			 * It's used to make the argument splicing more
-			 * readable.
+			 * XXX Internally used: not to be documented.
+			 * We ignore these flags.
+			 * I use this instead of hacking apart the
+			 * argument list, which is foolhardy.
 			 */
+			modval = optarg;
 			break;
 		default:
 			goto usage;
@@ -358,6 +336,15 @@ main(int argc, char *argv[])
 	if (NULL == sp)
 		goto main;
 
+	/* Check if we're overriding any given values. */
+
+	if (NULL != modval) {
+		if (newacct && NULL != strchr(modval, 'n'))
+			newacct = 0;
+		if (newkey && NULL != strchr(modval, 'N'))
+			newkey = 0;
+	}
+
 	if (0 == strcmp(sp, subps[COMP_REVOKE])) {
 		proccomp = COMP_REVOKE;
 		c = revokeproc(FDS_REVOKE, certdir,
@@ -418,18 +405,28 @@ main:
 	/*
 	 * Begin by checking to see whether we already have our keys on
 	 * disc when we've been ordered to generate them.
-	 * If we have them, then strip out the generation flags.
+	 * If we have them, then append to our "disabled flags" that we
+	 * don't want to perform these operations.
 	 */
 
 	if (newacct && -1 != access(acctkey, R_OK)) {
 		newacct = 0;
-		spliceargs(newargs, newargsz, 'n');
+		modval = "n";
+		dodbg("%s: account key exists "
+			"(not creating)", acctkey);
 	}
 
 	if (newkey && -1 != access(keyfile, R_OK)) {
 		newkey = 0;
-		spliceargs(newargs, newargsz, 'N');
+		modval = NULL != modval ? "nN" : "N";
+		dodbg("%s: domain key exists "
+			"(not creating)", keyfile);
 	}
+
+	/* Override variables. */
+
+	if (NULL != modval)
+		newargs[4] = modval;
 
 	/*
 	 * If we're running in multi-mode with default paths, try to
@@ -477,9 +474,7 @@ main:
 	if ( ! newkey && -1 == access(keyfile, R_OK)) {
 		warnx("%s: -k file must exist", keyfile);
 		ne++;
-	} else if (newkey && -1 != access(keyfile, R_OK))
-		dodbg("%s: domain key exists "
-			"(not creating)", keyfile);
+	} 
 
 	if (NULL == challenge && -1 == access(chngdir, R_OK)) {
 		warnx("%s: -C directory must exist", chngdir);
@@ -489,9 +484,7 @@ main:
 	if ( ! newacct && -1 == access(acctkey, R_OK)) {
 		warnx("%s: -f file must exist", acctkey);
 		ne++;
-	} else if (newacct && -1 != access(acctkey, R_OK))
-		dodbg("%s: account key exists "
-			"(not creating)", acctkey);
+	} 
 
 	if (ne > 0)
 		exit(EXIT_FAILURE);
