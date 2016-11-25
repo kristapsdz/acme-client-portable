@@ -34,10 +34,16 @@
 #include "extern.h"
 
 static void
-sandbox_violation(int signum, 
-	siginfo_t *info, void *void_context)
+sandbox_violation(int signum, siginfo_t *info, void *ctx)
 {
 	char cp[32];
+
+	(void)signum;
+	(void)ctx;
+
+	/*
+	 * This isn't signal-safe, but it's just for debugging.
+	 */
 
 	snprintf(cp, sizeof(cp), "%d-%d", proccomp, info->si_syscall);
 	write(STDERR_FILENO, cp, strlen(cp));
@@ -87,6 +93,18 @@ sandbox_allow_inet(scmp_filter_ctx ctx)
 	return(1);
 }
 
+static int
+sandbox_allow_dns(scmp_filter_ctx ctx)
+{
+
+	if ( ! sandbox_allow(ctx, SCMP_SYS(bind)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(getsockname)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(recvfrom)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(sendto)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(fcntl)))
+		return(0);
+	return(1);
+}
 
 static int
 sandbox_allow_cpath(scmp_filter_ctx ctx)
@@ -191,6 +209,25 @@ sandbox_after(int arg)
 		seccomp_release(ctx);
 		break;
 	case (COMP_DNS):
+		sandbox_child_debugging();
+		ctx = seccomp_init(SCMP_ACT_TRAP);
+		if (NULL == ctx) {
+			warn("seccomp_init");
+			return(0);
+		}
+		if ( ! sandbox_allow_stdio(ctx) ||
+		     ! sandbox_allow_cpath(ctx) ||
+		     ! sandbox_allow_dns(ctx) ||
+		     ! sandbox_allow_inet(ctx)) {
+			seccomp_release(ctx);
+			return(0);
+		}
+		if (0 != seccomp_load(ctx)) {
+			warn("seccomp_load");
+			seccomp_release(ctx);
+			return(0);
+		}
+		seccomp_release(ctx);
 		break;
 	case (COMP_FILE):
 		sandbox_child_debugging();
