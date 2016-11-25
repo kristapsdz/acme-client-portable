@@ -69,7 +69,7 @@ static	const char *const subps[COMP__MAX] = {
 	"revokeproc", /* COMP_REVOKE */
 };
 
-static	void xrun(enum comp, const char **) __attribute__((noreturn));
+static	void xrun(enum comp, char **) __attribute__((noreturn));
 
 /*
  * This isn't RFC1035 compliant, but does the bare minimum in making
@@ -124,10 +124,10 @@ xdup(int infd, int outfd)
  * subprocess of type "comp".
  */
 static void
-xrun(enum comp comp, const char **newargs)
+xrun(enum comp comp, char **newargs)
 {
 
-	newargs[2] = subps[comp];
+	newargs[2] = (char *)subps[comp];
 	execvp(newargs[0], (char *const *)newargs);
 	warn("%s", newargs[0]);
 	exit(EXIT_FAILURE);
@@ -136,23 +136,27 @@ xrun(enum comp comp, const char **newargs)
 
 /*
  * Splice the argument "rm" from the array of arguments "nargs".
- * "nargs" may consist of NULL pointers, so be careful.
  * Require the "rm" exist.
- * This is an in-place modification.
+ * This is an in-place modification using a dummy replacement.
  */
 static void
-spliceargs(const char **nargs, size_t nargsz, const char *rm)
+spliceargs(char **nargs, size_t nargsz, char rm)
 {
 	size_t	 i;
+	char	*cp = NULL;
 
-	for (i = 0; i < nargsz; i++) 
-		if (NULL != nargs[i] && 
-		    0 == strcmp(rm, nargs[i]))
-			break;
+	for (i = 0; i < nargsz; i++)  {
+		if (NULL == nargs[i])
+			continue;
+		if ('-' != nargs[i][0])
+			continue;
+		if (NULL == (cp = strchr(nargs[i], rm)))
+			continue;
 
-	assert(i < nargsz);
-	memmove(&nargs[i], &nargs[i + 1], 
-		(nargsz - i - 1) * sizeof(char *));
+		/* Use our dummy value. */
+		*cp = 'X';
+		break;
+	}
 }
 
 int
@@ -160,7 +164,8 @@ main(int argc, char *argv[])
 {
 	const char	 *domain, *agreement = AGREEMENT, 
 	      		 *challenge = NULL, *sp = NULL;
-	const char	**alts = NULL, **newargs = NULL;
+	const char	**alts = NULL;
+	char		**newargs = NULL;
 	char		 *certdir = NULL, *acctkey = NULL, 
 			 *chngdir = NULL, *keyfile = NULL,
 			 *keydir, *acctdir;
@@ -189,14 +194,14 @@ main(int argc, char *argv[])
 	if (NULL == newargs)
 		err(EXIT_FAILURE, "calloc");
 	newargs[0] = argv[0];
-	newargs[1] = "-x";
+	newargs[1] = (char *)"-x";
 	/* newargs[2] = the_subprocess */
 	for (i = 1, j = 3; i < (size_t)argc; i++, j++)
 		newargs[j] = argv[i];
 
 	/* Now parse arguments. */
 
-	while (-1 != (c = getopt(argc, argv, "beFmnNrsva:f:c:C:k:t:x:"))) 
+	while (-1 != (c = getopt(argc, argv, "beFmnNrsva:f:c:C:k:t:x:X"))) 
 		switch (c) {
 		case ('a'):
 			agreement = optarg;
@@ -258,6 +263,13 @@ main(int argc, char *argv[])
 			 * currently running.
 			 */
 			sp = optarg;
+			break;
+		case ('X'):
+			/*
+			 * We ignore this flag.
+			 * It's used to make the argument splicing more
+			 * readable.
+			 */
 			break;
 		default:
 			goto usage;
@@ -411,12 +423,12 @@ main:
 
 	if (newacct && -1 != access(acctkey, R_OK)) {
 		newacct = 0;
-		spliceargs(newargs, newargsz, "-n");
+		spliceargs(newargs, newargsz, 'n');
 	}
 
 	if (newkey && -1 != access(keyfile, R_OK)) {
 		newkey = 0;
-		spliceargs(newargs, newargsz, "-N");
+		spliceargs(newargs, newargsz, 'N');
 	}
 
 	/*
