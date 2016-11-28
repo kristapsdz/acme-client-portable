@@ -48,6 +48,9 @@ OBJS	+= util-portable.o
 
 # Do we have libseccomp installed?
 # If so, pull in the seccomp sandbox package.
+# If the sandbox doesn't work for you, just comment out all lines but
+# "OBJS += sandbox-null.o" and recompile.
+# PLEASE TELL ME IF IT DOESN'T WORK.
 
 ifeq ($(shell pkg-config --exists libseccomp && echo 1),1)
 OBJS	+= sandbox-seccomp.o
