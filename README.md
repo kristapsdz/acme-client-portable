@@ -17,9 +17,9 @@ FreeBSD (hence "-portable").
 You will need [libressl](http://www.libressl.org/) on all systems and
 [libbsd](https://libbsd.freedesktop.org/wiki/) on Linux (except for
 [musl](https://www.musl-libc.org) libc systems like
-[Alpine](https://alpinelinux.org/)).  Moreover, I strongly suggest you
-use [libseccomp](https://github.com/seccomp/libseccomp) if you want to
-use Linux sandboxing!
+[Alpine](https://alpinelinux.org/)).  Linux systems with
+[libseccomp](https://github.com/seccomp/libseccomp) will also have the
+experimental Linux sandbox.
 
 This repository mirrors the master CVS repository: any source changes
 will occur on the master and be pushed periodically to GitHub.  If you
@@ -29,7 +29,7 @@ Feature requests will be ignored unless joined by a patch.
 What are the difference between this and the non-portable release?
 
 * Conditional support for OpenBSD's sandbox, Mac OS X, or
-  **experimentally** (and to date incompletely) on Linux.
+  **experimentally** on Linux.
 * Proper preprocessor flags for unlocking some Linux functions.
 * Different library names on Linux.
 * Uses GNU make instead of BSD make.
@@ -51,6 +51,8 @@ co-exist with the file-system jail.
 Since your system might not be one of the tested ones (older OpenBSD,
 FreeBSD, Linux, Linux with musl libc, etc.), you may need to tune some
 of the values in the [GNUmakefile](GNUmakefile) or [config.h](config.h).
+Please **tell me** if you do so, so I can accommodate in future
+releases.
 
 In the former, you can adjust system-specific compilation flags.
 

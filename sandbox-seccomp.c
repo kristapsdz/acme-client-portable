@@ -36,7 +36,7 @@
 static void
 sandbox_violation(int signum, siginfo_t *info, void *ctx)
 {
-	char cp[32];
+	char cp[256];
 
 	(void)signum;
 	(void)ctx;
@@ -45,9 +45,11 @@ sandbox_violation(int signum, siginfo_t *info, void *ctx)
 	 * This isn't signal-safe, but it's just for debugging.
 	 */
 
-	snprintf(cp, sizeof(cp), "%d-%d", proccomp, info->si_syscall);
+	snprintf(cp, sizeof(cp), 
+		"The seccomp sandbox has failed, error: %d:%d.\n"
+		"Please report this number pair to the author.\n", 
+		proccomp, info->si_syscall);
 	write(STDERR_FILENO, cp, strlen(cp));
-	write(STDERR_FILENO, "\n", 1);
 	exit(1);
 }
 
