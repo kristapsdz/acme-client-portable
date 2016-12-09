@@ -128,6 +128,7 @@ sandbox_allow_stdio(scmp_filter_ctx ctx)
 	     ! sandbox_allow(ctx, SCMP_SYS(clock_gettime)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(close)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(time)) ||
+	     ! sandbox_allow(ctx, SCMP_SYS(fstat)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(read)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(readv)) ||
 	     ! sandbox_allow(ctx, SCMP_SYS(write)) ||
