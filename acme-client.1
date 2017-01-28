@@ -272,21 +272,34 @@ in which case the caller must create the challenge environment.
 This may be used for implementing
 .Dq dns-01
 and other system-specific challenges.
-To use
+When using
 .Fl t ,
 the caller invoking
 .Nm
-must wait for the system to print the thumbprint and token as
-.Dq token.thumbprint\en
-.Pq note the trailing newline
-for each domain on standard output.
-After each line, the caller must implement the challenge.
-Following that, the caller must write the same exact string (along with
-the newline) as standard input to
-.Nm .
-When
+waits for the program to issue pre-authorization requests to the CA.
+This happens quietly and without interaction. Once pre-authorizations
+are done,
 .Nm
-exits, there are no more domains.
+enters a negotiation loop with the caller. For each domain
+.Pq cn or sAN
+requested:
+.Bl -enum
+.It
+.Nm
+prints a line containing
+.Dq challenge-type dns-domain token.thumbprint\en
+.Pq note the trailing newline
+.It
+the caller performs any tasks to implement the challenge's response
+.It
+the caller write the same three-field string and the newline to
+the standard input of the
+.Nm
+program.
+.El
+This cycle repeats for each requested domain, then
+.Nm
+exits.
 .Ss Certificates
 Public certificates (domain certificate, chain, and the full-chain) are
 placed by default in
@@ -365,6 +378,27 @@ fi
 .Pp
 You'll need to replace the httpd-reload statement with the correct
 script to have your web server reload its certificates.
+.Pp
+A
+.Pa dns-01
+challenge conversation between a caller and
+.Nm
+might look something like this:
+.Bd -literal
+     caller  [runs acme-client example.com example.net example.org]
+acme-client  [spends some time talking with the Let's Encrypt CA]
+acme-client> dns-01 example.com qtm0z<elided>Y1qCnE.zZRX5<elided>kjxg_Q
+     caller  [computes the challenge response and updates example.com records]
+     caller> dns-01 example.com qtm0z<elided>Y1qCnE.zZRX5<elided>kjxg_Q
+acme-client> dns-01 example.net 2W2cc<elided>FewW_8.zZRX5<elided>kjxg_Q
+     caller  [computes the challenge response and updates example.net records]
+     caller> dns-01 example.net 2W2cc<elided>FewW_8.zZRX5<elided>kjxg_Q
+acme-client> dns-01 example.org lkh1Z<elided>kJbPqg.zZRX5<elided>kjxg_Q
+     caller  [computes the challenge response and updates example.org records]
+     caller> dns-01 example.org lkh1Z<elided>kJbPqg.zZRX5<elided>kjxg_Q
+acme-client  [exits]
+.Ed
+.Ed
 .\" .Sh DIAGNOSTICS
 .\" For sections 1, 4, 6, 7, 8, and 9 printf/stderr messages only.
 .\" .Sh ERRORS
