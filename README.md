@@ -19,6 +19,11 @@ You will need [libressl](http://www.libressl.org/) on all systems and
 [musl](https://www.musl-libc.org) libc systems like
 [Alpine](https://alpinelinux.org/)).
 
+Linux has an experimental
+[libseccomp](https://github.com/seccomp/libseccomp) sandbox, but you
+must enable it yourself.  Details in
+[Linux-seccomp.md](Linux-seccomp.md).
+
 This repository mirrors the master CVS repository: any source changes
 will occur on the master and be pushed periodically to GitHub.  If you
 have bug reports or patches, either file them here or e-mail them to me.
