@@ -7,7 +7,7 @@ on Linux for the default
 **tl;dr** seccomp filters differ too much between Linux installs;
 [acme-client](https://kristaps.bsd.lv/acme-client) terminates on
 violations; user think software is crap and goes back to other
-fly-by-night Ruby or Perlthon client; user is sad; I am sad.
+fly-by-night Ruby or Perlthon client; user is insecure; I am sad.
 
 # Introduction
 
