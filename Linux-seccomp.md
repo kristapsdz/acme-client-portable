@@ -76,7 +76,7 @@ Programming
 (even helped via [libseccomp](https://github.com/seccomp/libseccomp)) is
 like programming assembly language.  As for raw seccomp-bpf's syntax...
 
-[Looking at sandbox-seccomp-filter.c...](http://i0.kym-cdn.com/entries/icons/original/000/016/986/xl1XYq8.jpg)
+![Looking at sandbox-seccomp-filter.c...](http://i0.kym-cdn.com/entries/icons/original/000/016/986/xl1XYq8.jpg)
 
 However, the problem isn't that it's "hard" (though I think anybody
 would find
@@ -151,7 +151,7 @@ program --- in fact, I'd guess that most don't at all, being that
 [acme-client](https://kristaps.bsd.lv/acme-client) is for administering
 certificates, not writing code.  So if my program is meant to provide a
 service to people, but people can't use it --- what's the point of
-releasing it as open source?
+releasing it at all?
 
 ![What's the point?](http://www.theimaginativeconservative.org/wp-content/uploads/2014/05/peter-sellers-as-dr-strangelove-1.jpg)
 
@@ -173,7 +173,7 @@ the software, the application just *failed*.  Not *seccomp failed*, but
 *[acme-client](https://kristaps.bsd.lv/acme-client) failed*.  Ouch.
 
 What solutions do I have?  If I stay with seccomp, I continue to
-alienate general users and requiring skilled users (where "skilled" is a
+alienate general users and require skilled users (where "skilled" is a
 function of programming, not skilled in the domain of the application)
 to jump through hoops, and spend lots of my own time to interpret
 incoming violation reports from said skilled users.
@@ -184,15 +184,17 @@ Fact is, using seccomp is difficult unless
 
 1. the system really is trivial (pure computation), which reduces the
    probability of users having violations;
-2. the users are extremely skilled, which reduces the problem that users
-   will abandon the software; or
+2. the users are both skilled in programming and patient with
+   violations, which reduces the problem that users will abandon the
+   software; or
 3. I have the resources to properly test on most systems before
    releasing.
 
 It seems to me that seccomp is designed for big companies who can afford
 the resources (like those rhyming with "doodle"), big open source
-projects with ~~more intelligent developers and~~~ testing
-infrastructure like OpenSSH, or niche scientific systems.
+projects with ~~more intelligent developers and~~ testing
+infrastructure like [OpenSSH](https://www.openssh.com/), or niche
+scientific systems.
 
 That leaves [acme-client](https://kristaps.bsd.lv/acme-client) out of
 the loop.
@@ -200,10 +202,11 @@ the loop.
 Is this a problem?  It depends on the software, I guess.  But it's not
 *my* software that should scare you.  It's the many unwritten pieces of
 software, or written but unsecured, that you will never know about, or
-never use.  Because an environment hostile to small-time folks like
-myself cuts away the life-blood of the community.
+never use.  Or the software you *do* use that the developer doesn't have
+the time to secure.
 
-Fortunately, there's always OpenBSD!
+Fortunately, there's always [OpenBSD](http://www.openbsd.org) and
+[pledge(2)](http://man.openbsd.org/pledge.2)!
 
 ![You called?](https://www.linux.org.ru/gallery/4888769.jpg)
 
@@ -218,6 +221,9 @@ But really it kinda is, because it's important to show an example of how
 On both of these systems, I *know* that when I sandbox a given
 capability, it will be sandboxed for all of my users.  Whether that
 would remain if the C library were switchable is another story.
+Moreover, going from zero to hero in implementing a filter for a
+reasonably well-written piece of software isn't terribly difficult.
+Give it a try!
 
 # Solutions
 
