@@ -39,8 +39,9 @@ on [Linux](https://www.kernel.org).
 ![Keep them in the sandbox!](http://1.bp.blogspot.com/-F2qtZSFIrAQ/UYk8KnQqZ7I/AAAAAAAAATg/RKs0uOCPdXU/s1600/sandbox+fight.jpg)
 
 After implementing a filter that worked on a local x86\_64
-[Alpine](https://alpinelinux.org) system and releasing, I immediately
-began receiving violation reports (e.g.,
+[Alpine](https://alpinelinux.org) system (Alpine being the distribution
+that went fastest from ISO to installing the compiler and CVS) and
+releasing, I immediately began receiving violation reports (e.g.,
 [issue/16](https://github.com/kristapsdz/acme-client-portable/issues/16))
 for non-Alpine distributions and for non-x86\_64 architectures.
 
