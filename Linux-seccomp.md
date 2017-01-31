@@ -4,10 +4,10 @@ In this article, I describe why I'm disabling
 on Linux for the default
 [acme-client](https://kristaps.bsd.lv/acme-client) build.
 
-**tl;dr** seccomp filters differ too much between Linux installs;
+**tl;dr** seccomp filters differ significantly between Linux installs;
 [acme-client](https://kristaps.bsd.lv/acme-client) terminates on
-violations; user think software is crap and goes back to other
-fly-by-night Ruby or Perlthon client; user is insecure; I am sad.
+violations; users think software is crap and go back to other
+fly-by-night Ruby or Perlthon client; users are insecure; I am sad.
 
 # Introduction
 
