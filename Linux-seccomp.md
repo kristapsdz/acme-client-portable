@@ -5,6 +5,11 @@ on Linux for the default
 [acme-client](https://kristaps.bsd.lv/acme-client) build, and why I'll
 probably avoid seccomp in the future unless for trivial applications.
 
+**tl;dr** seccomp filters differ too much between Linux installs;
+[acme-client](https://kristaps.bsd.lv/acme-client) terminates on
+violations; user think software is crap and goes back to other
+fly-by-night Ruby or Perlthon client; user is sad; I am sad.
+
 # Introduction
 
 After implementing a sandbox for
@@ -134,55 +139,48 @@ differences were between big functions like
 Then there's local modifications.  And not just between special embedded
 systems.  But [Debian](https://www.debian.org/) and
 [Arch](https://www.archlinux.org/), both using
-[glibc](https://www.gnu.org/software/libc), have different kernels
-installed with different features.  Great.
+[glibc](https://www.gnu.org/software/libc) and both on x86\_64, have
+different kernels installed with different features.  Great.
 
-# The Linux problem
-
-That there's a seccomp problem means there's a Linux problem. 
-
-If in order to secure a non-trivial application (where trivial is "pure
-computation" --- meaning no system calls, and as we learned above, we
-never *really* know when this is the case) requires users to baby-sit
-its runtime, then I've just narrowed my potential audience to those who
-have the time and patience to do so.  Which, for them, means they want
-the software so badly they're willing to sacrifice the time.
-
-How often does that happen?
-
-Not everybody who really wants to use my software knows how to program
---- in fact, I'd guess that most don't at all, being that
-[acme-client](https://kristaps.bsd.lv/acme-client) is for administering
-certificates, not writing code.  So if my program is meant to provide a
-service to people, but people can't use it --- what's the point of
-releasing it at all?
-
-![What's the point?](http://www.theimaginativeconservative.org/wp-content/uploads/2014/05/peter-sellers-as-dr-strangelove-1.jpg)
+Less great for me and seccomp.
 
 # The ~~ego~~ developer problem
 
 When I first released
 [acme-client](https://kristaps.bsd.lv/acme-client), I assumed that users
-would let me know if their systems failed, and how.  What I didn't
-anticipate was how much the seccomp filter would be violated even though
-I carefully verified my test environment with a popular Linux on a
-popular architecture.
+would let me know if the system terminated with a violation.  What I
+didn't consider was how much the seccomp filter would be violated even
+though I carefully verified my test environment with a popular Linux on
+a popular architecture.  Or how long it would take me to verify
+violations and fix them (blindly).
 
-In the end, I took a lot of my potential users' time, took a lot of my
-own time tracking down system call violations, and alienated everybody
-else who just gave up when it failed.
+In the end, I took a lot of my users' time (and those were the good
+users, the ones you want, the ones who notify you of issues), I took a
+lot of my own time tracking down system call violations, and I alienated
+everybody else who just gave up when it failed.
 
 What's more embarrassing is that, to most users who simply downloaded
 the software, the application just *failed*.  Not *seccomp failed*, but
 *[acme-client](https://kristaps.bsd.lv/acme-client) failed*.  Ouch.
 
-What solutions do I have?  If I stay with seccomp, I continue to
-alienate general users and require skilled users (where "skilled" is a
-function of programming --- not skilled in the domain of the
-application) to jump through hoops, and spend lots of my own time to
-interpret incoming violation reports from said mystical "skilled" users.
+Fact is, not everybody who really wants to use my software knows how to
+program --- in fact, I'd guess that most don't at all, being that
+[acme-client](https://kristaps.bsd.lv/acme-client) is for administering
+certificates, not writing code.  To them, it was just crap.
 
-All the while, other people trying the software just think it's crap.
+So if my program is meant to provide a service to people, but people
+can't use it and think it's crap --- what's the point of releasing it at
+all?
+
+![What's the point?](http://www.theimaginativeconservative.org/wp-content/uploads/2014/05/peter-sellers-as-dr-strangelove-1.jpg)
+
+What solutions do I have?  If I stay with seccomp, I continue to
+alienate general users with my "crappy" software, require skilled users
+(where "skilled" is a function of programming) to jump through hoops,
+and spend lots of my own time to interpret incoming violation reports
+from said mystical "skilled" users.
+
+# The Linux problem
 
 Fact is, using seccomp is difficult unless
 
@@ -191,27 +189,29 @@ Fact is, using seccomp is difficult unless
 2. the users are both skilled in programming and patient with
    violations, which reduces the problem that users will abandon the
    software; or
-3. I have the resources to properly test on most systems before
+3. you have the resources to properly test on most systems before
    releasing.
 
 It seems to me that seccomp is designed for big companies who can afford
 the resources (like those rhyming with "doodle"), big open source
 projects with ~~more intelligent developers and~~ testing
-infrastructure like [OpenSSH](https://www.openssh.com/), or niche
-scientific systems.
+infrastructure like [OpenSSH](https://www.openssh.com/), or niche pure
+computation systems.
 
 That leaves [acme-client](https://kristaps.bsd.lv/acme-client) out of
 the loop.
 
 Is this a problem?  It depends on the software, I guess.  But it's not
-*my* software that should scare you.  It's that mine is probably only
-one of many potentially good pieces of software that will never be
-secured, thus will fall under your radar.  Or worse the software you
-*do* use, or need to use, that the developer doesn't have the time to
-secure.
+*my* software that should scare you.  It's that mine is only one of many
+potentially good pieces of software that will never be secured, and thus
+will fall under your radar.  Or worse --- it's that the software you
+*do* use, or need to use, isn't secure because the developer is in my
+shoes.
 
 Fortunately, there's always [OpenBSD](http://www.openbsd.org) and
-[pledge(2)](http://man.openbsd.org/pledge.2)!
+[pledge(2)](http://man.openbsd.org/pledge.2)!  And if there are
+alternatives, that means that the problems aren't insurmountable.  Which
+makes it a Linux problem, because Linux suffers from seccomp's problems.
 
 ![You called?](https://www.linux.org.ru/gallery/4888769.jpg)
 
