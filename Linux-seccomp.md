@@ -2,8 +2,7 @@
 In this article, I describe why I'm disabling
 [seccomp](https://www.kernel.org/doc/Documentation/prctl/seccomp_filter.txt)
 on Linux for the default
-[acme-client](https://kristaps.bsd.lv/acme-client) build, and why I'll
-probably avoid seccomp in the future unless for trivial applications.
+[acme-client](https://kristaps.bsd.lv/acme-client) build.
 
 **tl;dr** seccomp filters differ too much between Linux installs;
 [acme-client](https://kristaps.bsd.lv/acme-client) terminates on
@@ -168,9 +167,10 @@ program --- in fact, I'd guess that most don't at all, being that
 [acme-client](https://kristaps.bsd.lv/acme-client) is for administering
 certificates, not writing code.  To them, it was just crap.
 
-So if my program is meant to provide a service to people, but people
-can't use it and think it's crap --- what's the point of releasing it at
-all?
+So if my carefully-written and hardened program is meant to provide a
+valuable security service, but it terminates due to seccomp violations
+and users think it's crap and use in-secure applications --- what's the
+point of sandboxing it at all?
 
 ![What's the point?](http://www.theimaginativeconservative.org/wp-content/uploads/2014/05/peter-sellers-as-dr-strangelove-1.jpg)
 
@@ -221,7 +221,8 @@ This article isn't supposed to be about OpenBSD's
 which is eminently more usable than either seccomp-bpf or libseccomp.
 
 But really it kinda is, because it's important to show an example of how
-*not* to go down the Linux/seccomp road.
+*not* to go down the Linux/seccomp road.  (Also, I want to look
+positive, when really I'm just sad and a little pissed.)
 
 On both of these systems, I *know* that when I sandbox a given
 capability, it will be sandboxed for all of my users.  Whether that
