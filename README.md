@@ -17,9 +17,7 @@ FreeBSD (hence "-portable").
 You will need [libressl](http://www.libressl.org/) on all systems and
 [libbsd](https://libbsd.freedesktop.org/wiki/) on Linux (except for
 [musl](https://www.musl-libc.org) libc systems like
-[Alpine](https://alpinelinux.org/)).  Linux systems with
-[libseccomp](https://github.com/seccomp/libseccomp) will also have the
-experimental Linux sandbox.
+[Alpine](https://alpinelinux.org/)).
 
 This repository mirrors the master CVS repository: any source changes
 will occur on the master and be pushed periodically to GitHub.  If you
