@@ -52,13 +52,20 @@ OBJS	+= util-portable.o
 # "OBJS += sandbox-null.o" and recompile.
 # PLEASE TELL ME IF IT DOESN'T WORK.
 
-ifeq ($(shell pkg-config --exists libseccomp && echo 1),1)
-OBJS	+= sandbox-seccomp.o
-LIBADD	+= $(shell pkg-config --libs libseccomp)
-CFLAGS	+= $(shell pkg-config --cflags libseccomp)
-else
+# For the time being, I am disabling seccomp.
+# It does not work consistently between machines and is difficult to
+# debug.
+# See https://github.com/kristapsdz/acme-client-portable if you are
+# willing to enable this (at your own discretion) and synchronise the
+# seccomp code with me.
+
+#ifeq ($(shell pkg-config --exists libseccomp && echo 1),1)
+#OBJS	+= sandbox-seccomp.o
+#LIBADD	+= $(shell pkg-config --libs libseccomp)
+#CFLAGS	+= $(shell pkg-config --cflags libseccomp)
+#else
 OBJS	+= sandbox-null.o
-endif
+#endif
 
 else ifeq ($(shell uname), Darwin)
 
