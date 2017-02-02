@@ -36,8 +36,6 @@ on [FreeBSD](https://www.freebsd.org), and
 [seccomp-bpf](https://www.kernel.org/doc/Documentation/prctl/seccomp_filter.txt)
 on [Linux](https://www.kernel.org).
 
-![Keep them in the sandbox!](http://1.bp.blogspot.com/-F2qtZSFIrAQ/UYk8KnQqZ7I/AAAAAAAAATg/RKs0uOCPdXU/s1600/sandbox+fight.jpg)
-
 After implementing a filter that worked on a local x86\_64
 [Alpine](https://alpinelinux.org) system (Alpine being the distribution
 that went fastest from ISO to installing the compiler and CVS) and
