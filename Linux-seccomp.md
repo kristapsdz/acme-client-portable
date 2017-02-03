@@ -9,6 +9,12 @@ on Linux for the default
 violations; users think software is crap and go back to other
 fly-by-night Ruby or Perlthon client; users are insecure; I am sad.
 
+**Edit**: people seem to be stumbling upon my usage of Alpine or that
+this is a "rant".  As for the second, this is a technical article with
+technical arguments --- not an op-ed.  As for the first, it's irrelevant
+to the technical arguments.  The discussion covers Debian, Ubuntu, Arch,
+and others.  It's Linux/seccomp, not Alpine, not Debian.
+
 # Introduction
 
 After implementing a sandbox for
