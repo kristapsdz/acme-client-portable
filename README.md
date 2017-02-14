@@ -49,6 +49,11 @@ Moreover, while the sandbox on Mac OS X (which is deprecated?) exists,
 its behaviour is not well-documented and, morever, is weakened to
 co-exist with the file-system jail.
 
+**Feature requests will be ignored unless joined by a patch.**  If
+there's something you need, I'm happy to work with you to make it
+happen.  If you really need it, I'm available for contract (contact me
+by e-mail).
+
 ## Configuration
 
 Since your system might not be one of the tested ones (older OpenBSD,
