@@ -56,8 +56,8 @@ by e-mail).
 
 ## Configuration
 
-Since your system might not be one of the tested ones (older OpenBSD,
-FreeBSD, Linux, Linux with musl libc, etc.), you may need to tune some
+Since your system might not be one of the tested ones (FreeBSD, Linux,
+Linux with musl libc, etc.), you may need to tune some
 of the values in the [GNUmakefile](GNUmakefile) or [config.h](config.h).
 Please **tell me** if you do so, so I can accommodate in future
 releases.
