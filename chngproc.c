@@ -43,12 +43,19 @@ chngproc(int netsock, const char *root, const char *challenge)
 	long		  lval;
 	enum chngop	  op;
 	void		 *pp;
+	int chngdir_fd;
+	const char *chngdir = NULL != challenge ? PATH_VAR_EMPTY : root;
+
+	if (-1 == (chngdir_fd = open(chngdir, O_RDONLY|O_DIRECTORY))) {
+		warnx("open: %s", chngdir);
+		goto out;
+	}
 
 	/* File-system and sandbox jailing. */
 
 	if ( ! sandbox_before())
 		goto out;
-	else if ( ! dropfs(NULL != challenge ? PATH_VAR_EMPTY : root))
+	else if ( ! dropfs(chngdir))
 		goto out;
 	else if ( ! sandbox_after(NULL != challenge))
 		goto out;
@@ -157,7 +164,7 @@ chngproc(int netsock, const char *root, const char *challenge)
 				goto out;
 			}
 
-			fd = open(fs[fsz - 1], 
+			fd = openat(chngdir_fd, fs[fsz - 1],
 				O_WRONLY|O_EXCL|O_CREAT, 0444);
 			if (-1 == fd) {
 				warn("%s", fs[fsz - 1]);
@@ -197,10 +204,12 @@ out:
 		close(fd);
 	if (NULL == challenge) 
 		for (i = 0; i < fsz; i++) {
-			if (-1 == unlink(fs[i]) && ENOENT != errno)
+			if (-1 == unlinkat(chngdir_fd, fs[i], 0) && ENOENT != errno)
 				warn("%s", fs[i]);
 			free(fs[i]);
 		}
+	if (-1 != chngdir_fd)
+		close(chngdir_fd);
 	free(fs);
 	free(fmt);
 	free(fmtbuf);

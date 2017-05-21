@@ -35,6 +35,49 @@ struct	addr {
 	char	 ip[INET6_ADDRSTRLEN];
 };
 
+#ifdef __FreeBSD__
+#include <libcasper.h>
+#include <casper/cap_dns.h>
+
+static cap_channel_t *capdns;
+
+int
+dns_init(void) {
+	cap_channel_t *capcas;
+
+	capcas = cap_init();
+	if (NULL == capcas) {
+		warnx("Casper initialization failure");
+		return 0;
+	}
+
+	capdns = cap_service_open(capcas, "system.dns");
+	cap_close(capcas);
+
+	if (NULL == capdns) {
+		warnx("Casper system.dns service unavailable");
+		return 0;
+	}
+
+	return 1;
+}
+
+void
+dns_deinit(void) {
+	if (capdns)
+		cap_close(capdns);
+}
+#else
+int
+dns_init(void) {
+	return 1;
+}
+
+void
+dns_deinit(void) {
+}
+#endif
+
 /*
  * This is a modified version of host_dns in config.c of OpenBSD's ntpd.
  */
@@ -66,7 +109,11 @@ host_dns(const char *s, struct addr *vec)
 	hints.ai_socktype = SOCK_DGRAM; /* DUMMY */
 	/* ntpd MUST NOT use AI_ADDRCONFIG here */
 
+#ifdef __FreeBSD__
+	error = cap_getaddrinfo(capdns, s, NULL, &hints, &res0);
+#else
 	error = getaddrinfo(s, NULL, &hints, &res0);
+#endif
 
 	if (error == EAI_AGAIN ||
 		/* FIXME */
@@ -121,6 +168,9 @@ dnsproc(int nfd)
 	ssize_t		 vsz = 0;
 	size_t		 i;
 	enum dnsop	 op;
+
+	if (!dns_init())
+		goto out;
 
 	/*
 	 * Why don't we chroot() here?
@@ -195,6 +245,7 @@ dnsproc(int nfd)
 	rc = 1;
 out:
 	close(nfd);
+	dns_deinit();
 	free(look);
 	free(last);
 	return(rc);

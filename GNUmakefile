@@ -102,9 +102,9 @@ else ifeq ($(shell uname), FreeBSD)
 # LibreSSL is assumed to be in packages (/usr/local).
 
 CFLAGS	+= -I/usr/local/include
-LDFLAGS	+= -L/usr/local/lib
+LDFLAGS	+= -L/usr/local/lib -lcasper -lcap_dns
 OBJS	+= util-portable.o \
-	   sandbox-null.o
+	   sandbox-capsicum.o
 
 else ifeq ($(shell uname), NetBSD)
 

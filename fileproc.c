@@ -31,7 +31,7 @@
 #include "extern.h"
 
 static int
-serialise(const char *tmp, const char *real,
+serialise(int basefd, const char *tmp, const char *real,
 	const char *v, size_t vsz,
 	const char *v2, size_t v2sz)
 {
@@ -42,7 +42,7 @@ serialise(const char *tmp, const char *real,
 	 * Then atomically (?) do the rename.
 	 */
 
-	fd = open(tmp, O_WRONLY|O_CREAT|O_TRUNC, 0444);
+	fd = openat(basefd, tmp, O_WRONLY|O_CREAT|O_TRUNC, 0444);
 	if (-1 == fd) {
 		warn("%s", tmp);
 		return (0);
@@ -57,7 +57,7 @@ serialise(const char *tmp, const char *real,
 	} else if (-1 == close(fd)) {
 		warn("%s", tmp);
 		return (0);
-	} else if (-1 == rename(tmp, real)) {
+	} else if (-1 == renameat(basefd, tmp, basefd, real)) {
 		warn("%s", real);
 		return (0);
 	}
@@ -75,6 +75,12 @@ fileproc(int certsock, int backup, const char *certdir)
 	long		 lval;
 	enum fileop	 op;
 	time_t		 t;
+	int certdir_fd;
+
+	if (-1 == (certdir_fd = open(certdir, O_RDONLY|O_DIRECTORY))) {
+		warnx("open: %s", certdir);
+		goto out;
+	}
 
 	/* File-system and sandbox jailing. */
 
@@ -114,7 +120,7 @@ fileproc(int certsock, int backup, const char *certdir)
 		t = time(NULL);
 		snprintf(file, sizeof(file),
 			"cert-%llu.pem", (unsigned long long)t);
-		if (-1 == link(CERT_PEM, file) && ENOENT != errno) {
+		if (-1 == linkat(certdir_fd, CERT_PEM, certdir_fd, file, 0) && ENOENT != errno) {
 			warnx("%s/%s", certdir, CERT_PEM);
 			goto out;
 		} else
@@ -123,7 +129,7 @@ fileproc(int certsock, int backup, const char *certdir)
 
 		snprintf(file, sizeof(file),
 			"chain-%llu.pem", (unsigned long long)t);
-		if (-1 == link(CHAIN_PEM, file) && ENOENT != errno) {
+		if (-1 == linkat(certdir_fd, CHAIN_PEM, certdir_fd, file, 0) && ENOENT != errno) {
 			warnx("%s/%s", certdir, CHAIN_PEM);
 			goto out;
 		} else
@@ -132,7 +138,7 @@ fileproc(int certsock, int backup, const char *certdir)
 
 		snprintf(file, sizeof(file),
 			"fullchain-%llu.pem", (unsigned long long)t);
-		if (-1 == link(FCHAIN_PEM, file) && ENOENT != errno) {
+		if (-1 == linkat(certdir_fd, FCHAIN_PEM, certdir_fd, file, 0) && ENOENT != errno) {
 			warnx("%s/%s", certdir, FCHAIN_PEM);
 			goto out;
 		} else
@@ -147,19 +153,19 @@ fileproc(int certsock, int backup, const char *certdir)
 	 */
 
 	if (FILE_REMOVE == op) {
-		if (-1 == unlink(CERT_PEM) && ENOENT != errno) {
+		if (-1 == unlinkat(certdir_fd, CERT_PEM, 0) && ENOENT != errno) {
 			warn("%s/%s", certdir, CERT_PEM);
 			goto out;
 		} else
 			dodbg("%s/%s: unlinked", certdir, CERT_PEM);
 
-		if (-1 == unlink(CHAIN_PEM) && ENOENT != errno) {
+		if (-1 == unlinkat(certdir_fd, CHAIN_PEM, 0) && ENOENT != errno) {
 			warn("%s/%s", certdir, CHAIN_PEM);
 			goto out;
 		} else
 			dodbg("%s/%s: unlinked", certdir, CHAIN_PEM);
 
-		if (-1 == unlink(FCHAIN_PEM) && ENOENT != errno) {
+		if (-1 == unlinkat(certdir_fd, FCHAIN_PEM, 0) && ENOENT != errno) {
 			warn("%s/%s", certdir, FCHAIN_PEM);
 			goto out;
 		} else
@@ -178,7 +184,7 @@ fileproc(int certsock, int backup, const char *certdir)
 
 	if (NULL == (ch = readbuf(certsock, COMM_CHAIN, &chsz)))
 		goto out;
-	if ( ! serialise(CHAIN_BAK, CHAIN_PEM, ch, chsz, NULL, 0))
+	if ( ! serialise(certdir_fd, CHAIN_BAK, CHAIN_PEM, ch, chsz, NULL, 0))
 		goto out;
 
 	dodbg("%s/%s: created", certdir, CHAIN_PEM);
@@ -192,7 +198,7 @@ fileproc(int certsock, int backup, const char *certdir)
 
 	if (NULL == (csr = readbuf(certsock, COMM_CSR, &csz)))
 		goto out;
-	if ( ! serialise(CERT_BAK, CERT_PEM, csr, csz, NULL, 0))
+	if ( ! serialise(certdir_fd, CERT_BAK, CERT_PEM, csr, csz, NULL, 0))
 		goto out;
 
 	dodbg("%s/%s: created", certdir, CERT_PEM);
@@ -204,13 +210,15 @@ fileproc(int certsock, int backup, const char *certdir)
 	 * on-file certificates were changed.
 	 */
 
-	if ( ! serialise(FCHAIN_BAK, FCHAIN_PEM, csr, csz, ch, chsz))
+	if ( ! serialise(certdir_fd, FCHAIN_BAK, FCHAIN_PEM, csr, csz, ch, chsz))
 		goto out;
 
 	dodbg("%s/%s: created", certdir, FCHAIN_PEM);
 
 	rc = 2;
 out:
+	if (-1 != certdir_fd)
+		close(certdir_fd);
 	close(certsock);
 	free(csr);
 	free(ch);
