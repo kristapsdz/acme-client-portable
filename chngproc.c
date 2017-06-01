@@ -107,7 +107,7 @@ chngproc(int netsock, const char *root, const char *challenge)
 		tok = NULL;
 		fsz++;
 
-		if (NULL != challenge) {
+		if (NULL != challenge && strcmp("tls-sni-01",challenge) != 0 ) {
 			/*
 			 * If we have a specific challenge request, then
 			 * we write the request and thumbprint to stdout
