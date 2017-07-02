@@ -1,6 +1,6 @@
 /*	$Id$ */
 /*
- * Copyright (c) 2016 Kristaps Dzonsons <kristaps@bsd.lv>
+ * Copyright (c) 2016--2017 Kristaps Dzonsons <kristaps@bsd.lv>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -28,9 +28,6 @@
 
 #include "http.h"
 #include "extern.h"
-
-#define URL_REAL_CA "https://acme-v01.api.letsencrypt.org/directory"
-#define URL_STAGE_CA "https://acme-staging.api.letsencrypt.org/directory"
 
 #define	RETRY_DELAY 5
 #define RETRY_MAX 10
@@ -575,9 +572,8 @@ dofullchain(struct conn *c, const char *addr)
  */
 int
 netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
-	int newacct, int revocate, int staging, 
-	const char *const *alts, size_t altsz, const char *agreement,
-	const char *challenge)
+	const char *const *alts, size_t altsz, 
+	const struct config *cfg)
 {
 	int		 rc = 0;
 	size_t		 i;
@@ -661,7 +657,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 
 	c.dfd = dfd;
 	c.fd = afd;
-	c.na = staging ? URL_STAGE_CA : URL_REAL_CA;
+	c.na = cfg->url;
 
 	if (NULL == c.cfg)
 		goto out;
@@ -681,7 +677,7 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 	 * certproc, which will in turn notify the fileproc.
 	 */
 
-	if (revocate) {
+	if (cfg->revocate) {
 		if (NULL == (cert = readstr(rfd, COMM_CSR)))
 			goto out;
 		if ( ! dorevoke(&c, paths.revokecert, cert))
@@ -693,14 +689,14 @@ netproc(int kfd, int afd, int Cfd, int cfd, int dfd, int rfd,
 
 	/* If new, register with the CA server. */
 
-	if (newacct && ! donewreg(&c, agreement, &paths))
+	if (cfg->newacct && ! donewreg(&c, cfg->agree, &paths))
 		goto out;
 
 	/* Pre-authorise all domains with CA server. */
 
 	for (i = 0; i < altsz; i++)
 		if ( ! dochngreq(&c, alts[i], 
-		    &chngs[i], &paths, challenge))
+		    &chngs[i], &paths, cfg->challenge))
 			goto out;
 
 	/*
