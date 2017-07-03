@@ -27,8 +27,10 @@
 #include "extern.h"
 
 int
-sandbox_before(void)
+sandbox_after(int arg)
 {
+
+	(void)arg;
 
 	switch (proccomp) {
 	case (COMP_CERT):
@@ -36,6 +38,11 @@ sandbox_before(void)
 	case (COMP_REVOKE):
 	case (COMP__MAX):
 	case (COMP_ACCOUNT):
+		if (cap_enter() < 0 && ENOSYS != errno) {
+			warn("cap_enter");
+			return(0);
+		}
+		break;
 	case (COMP_CHALLENGE):
 	case (COMP_FILE):
 	case (COMP_DNS):
@@ -47,9 +54,8 @@ sandbox_before(void)
 }
 
 int
-sandbox_after(int arg)
+sandbox_before(void)
 {
 
-	(void)arg;
 	return(1);
 }
