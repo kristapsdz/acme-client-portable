@@ -104,7 +104,7 @@ else ifeq ($(shell uname), FreeBSD)
 CFLAGS	+= -I/usr/local/include
 LDFLAGS	+= -L/usr/local/lib
 OBJS	+= util-portable.o \
-	   sandbox-null.o
+	   sandbox-capsicum.o
 
 else ifeq ($(shell uname), NetBSD)
 
