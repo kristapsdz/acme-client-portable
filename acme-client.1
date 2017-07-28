@@ -25,7 +25,7 @@
 .\" Not used in OpenBSD.
 .Sh SYNOPSIS
 .Nm acme-client
-.Op Fl beFmnNOrsv
+.Op Fl beFnNOrsv
 .Op Fl a Ar agreement
 .Op Fl C Ar challengedir
 .Op Fl c Ar certdir
@@ -53,21 +53,25 @@ By default, it uses
 .Pa /var/www/acme
 for responding to challenges
 .Pq Fl C ,
-.Pa /etc/ssl/acme
+.Pa /etc/ssl/acme/DOMAIN
 for the public certificate directory
 .Pq Fl c ,
-.Pa /etc/ssl/acme/private/privkey.pem
+.Pa /etc/ssl/acme/private/DOMAIN/privkey.pem
 for the domain private key
 .Pq Fl k ,
 and
-.Pa /etc/acme/privkey.pem
+.Pa /etc/acme/DOMAIN/privkey.pem
 for the account private key
 .Pq Fl f .
-All of these must exist unless you use
+All of these keys must exist unless you use
 .Fl n
 and/or
 .Fl N ,
 which will generate the account and domain private keys, respectively.
+The directories, not including the DOMAIN, must also exist, but the
+DOMAIN subdirectories will be created as required. Note tha DOMAIN represents
+the first (main) domain listed after the argument list.
+.Pp
 Its arguments are as follows:
 .Bl -tag -width Ds
 .It Fl b
@@ -95,20 +99,6 @@ If a new domain is specified, the certificate will be renewed as if
 were also specified.
 .It Fl F
 Force updating the certificate signature even if it's too soon.
-.It Fl m
-Append
-.Ar domain
-to all default paths except the challenge path
-.Pq i.e., those that are overriden by Fl c , k , f .
-Thus,
-.Ar foo.com
-as the initial domain would make the default domain private key into
-.Pa /etc/ssl/acme/private/foo.com/privkey.pem .
-This is useful in setups with multiple domain sets.
-If the
-.Pa foo.com
-directory is not found within non-overriden default paths, it will be
-created automatically.
 .It Fl n
 Create a new 4096-bit RSA account key if one does not already exist.
 .It Fl N
@@ -164,10 +154,8 @@ The only difference between this and the
 .Ar altnames
 is that it's put into the certificate's
 .Li CN
-field and that it uses the
-.Dq main
-domain when specifying
-.Fl m .
+field and it is used for the DOMAIN identifying the pertinent
+subdirectory.
 .It Ar altnames
 Alternative names
 .Pq Dq SAN
@@ -277,7 +265,7 @@ exits.
 .Ss Certificates
 Public certificates (domain certificate, chain, and the full-chain) are
 placed by default in
-.Pa /etc/ssl/acme
+.Pa /etc/ssl/acme/DOMAIN
 as
 .Pa cert.pem ,
 .Pa chain.pem ,
@@ -320,8 +308,8 @@ An nginx configuration could be as follows:
 server {
   listen 443;
   server_name foo.com www.foo.com;
-  ssl_certificate /etc/ssl/acme/fullchain.pem;
-  ssl_certificate_key /etc/ssl/acme/private/privkey.pem;
+  ssl_certificate /etc/ssl/acme/foo.com/fullchain.pem;
+  ssl_certificate_key /etc/ssl/acme/foo.com/private/privkey.pem;
 }
 server {
   listen 80;
@@ -338,9 +326,8 @@ The following for Apache:
   ServerName foo.com
   ServerAlias www.foo.com
   SSLEngine on
-  SSLCertificateFile /etc/ssl/acme/cert.pem
-  SSLCertificateChainFile /etc/ssl/acme/fullchain.pem
-  SSLCertificateKeyFile /etc/ssl/acme/private/privkey.pem
+  SSLCertificateFile /etc/ssl/acme/foo.com/fullchain.pem
+  SSLCertificateKeyFile /etc/ssl/acme/private/foo.com/privkey.pem
 </VirtualHost>
 <VirtualHost *:80>
   ServerName foo.com
@@ -359,8 +346,8 @@ server "www.foo.com" {
     root { "/acme", strip 2 }
   }
   tls {
-    certificate "/etc/ssl/acme/fullchain.pem"
-    key "/etc/ssl/acme/private/privkey.pem"
+    certificate "/etc/ssl/acme/DOMAIN/fullchain.pem"
+    key "/etc/ssl/acme/private/DOMAIN/privkey.pem"
   }
 }
 .Ed

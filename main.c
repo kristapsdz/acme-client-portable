@@ -150,7 +150,6 @@ main(int argc, char *argv[])
 			  cert_fds[2], file_fds[2], dns_fds[2],
 			  rvk_fds[2];
 	int		  c, rc, 
-			  multidir = 0, 
 			  build_certdir, build_ssldir, 
 			  build_acctdir;
 	pid_t		  pids[COMP__MAX];
@@ -184,7 +183,7 @@ main(int argc, char *argv[])
 	cfg.url = URL_REAL_CA;
 	cfg.agree = URL_AGREE;
 
-	while (-1 != (c = getopt(argc, argv, "beFmnNOrsva:f:c:C:k:t:x:X:"))) 
+	while (-1 != (c = getopt(argc, argv, "beFnNOrsva:f:c:C:k:t:x:X:"))) 
 		switch (c) {
 		case ('a'):
 			cfg.agree = optarg;
@@ -217,9 +216,6 @@ main(int argc, char *argv[])
 			free(keyfile);
 			if (NULL == (keyfile = strdup(optarg)))
 				err(EXIT_FAILURE, "strdup");
-			break;
-		case ('m'):
-			multidir = 1;
 			break;
 		case ('n'):
 			cfg.newacct = 1;
@@ -292,39 +288,28 @@ main(int argc, char *argv[])
 	/* 
 	 * Now we allocate our directories and file path buffers IFF we
 	 * haven't specified them on the command-line.
-	 * If we're in "multidir" (-m) mode, we use our initial domain
+	 * We're always in "multidir" mode, so we use our initial domain
 	 * name when specifying the prefixes.
-	 * Otherwise, we put them all in a known location.
 	 * We don't /do/ anything here: just build the paths.
 	 */
 
-	build_certdir = (NULL == certdir) && multidir;
-	build_ssldir = (NULL == keyfile) && multidir;
-	build_acctdir = (NULL == acctkey) && multidir;
+	build_certdir = (NULL == certdir);
+	build_ssldir = (NULL == keyfile);
+	build_acctdir = (NULL == acctkey);
 
 	if (NULL == certdir)
-		certdir = multidir ?
-			doasprintf(SSL_DIR "/%s", domain) :
-			strdup(SSL_DIR);
+		certdir = doasprintf(SSL_DIR "/%s", domain);
 	if (NULL == keyfile)
-		keyfile = multidir ?
-			doasprintf(SSL_PRIV_DIR "/%s/"
-				PRIVKEY_FILE, domain) :
-			strdup(SSL_PRIV_DIR "/" PRIVKEY_FILE);
+		keyfile = doasprintf(SSL_PRIV_DIR "/%s/"
+				PRIVKEY_FILE, domain);
 	if (NULL == acctkey)
-		acctkey = multidir ?
-			doasprintf(ETC_DIR "/%s/"
-				PRIVKEY_FILE, domain) :
-			strdup(ETC_DIR "/" PRIVKEY_FILE);
+		acctkey = doasprintf(ETC_DIR "/%s/"
+				PRIVKEY_FILE, domain);
 	if (NULL == chngdir)
 		chngdir = strdup(WWW_DIR);
 
-	keydir = multidir ?
-		doasprintf(SSL_PRIV_DIR "/%s", domain) :
-		strdup(SSL_PRIV_DIR);
-	acctdir = multidir ?
-		doasprintf(ETC_DIR "/%s", domain) :
-		strdup(ETC_DIR);
+	keydir = doasprintf(SSL_PRIV_DIR "/%s", domain);
+	acctdir = doasprintf(ETC_DIR "/%s", domain);
 
 	if (NULL == certdir || NULL == keyfile ||
 	    NULL == acctkey || NULL == chngdir ||
