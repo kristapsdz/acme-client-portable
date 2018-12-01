@@ -1,3 +1,24 @@
+**Attention *acme-client-portable* is no longer maintained.  Since
+*[acme-client](https://github.com/kristapsdz/acme-client)* made its way
+into OpenBSD, I've only been using the base version.**
+
+**So if you're using this client, you're using old code!  If you want to
+use the current version of *acme-client*, you'll need to use OpenBSD.
+Which I recommend doing anyway, of course.**
+
+If you can't use OpenBSD, it's not a difficult challenge to port the
+OpenBSD *acme-client* to your operating system.  However, be aware that
+it won't share the security mechanisms available to the downstream code.
+Regardless, if anybody would like to take a stab at this, I'd be happy
+to review your work!
+
+I suggest grabbing a copy of the OpenBSD version and setting up an
+[oconfigure](https://github.com/kristapsdz/oconfigure) scaffold around
+the code.  This will give you all of the usual string functions that
+might not be available.  Next, you'll need to add in your system's
+sandbox mechanisms.  This will require your own code.  You can use the
+existing portability shim as a guide.  Good luck!
+
 ## Synopsis
 
 *acme-client-portable* is yet another
